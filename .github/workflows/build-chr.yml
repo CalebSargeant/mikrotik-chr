@@ -86,7 +86,6 @@ jobs:
           ls -la chr_extracted/
           
           # Create a loopback device from the RouterOS partition 
-          # (using partition 2 which is the RouterOS partition)
           LOOP_DEVICE=$(sudo losetup -f)
           echo "Using loop device: $LOOP_DEVICE"
           sudo losetup -P $LOOP_DEVICE chr.img
@@ -116,12 +115,15 @@ jobs:
           # Create the directory structure
           sudo mkdir -p mnt/rw/store/
           
-          # Copy the startup script
+          # Copy the startup script to both locations - for redundancy
           sudo cp scripts/startup.rsc mnt/rw/store/
+          sudo cp scripts/startup.rsc mnt/autorun.rsc
           
-          # Verify the file was copied
+          # Verify the files were copied
           echo "Content of rw/store after copy:"
           ls -la mnt/rw/store/
+          echo "Content of root directory after copy:"
+          ls -la mnt/ | grep autorun.rsc
           
           # Sync to ensure all writes are complete
           sudo sync
@@ -131,29 +133,6 @@ jobs:
           
           # Detach loop device
           sudo losetup -d $LOOP_DEVICE
-          
-          # Extract the modified RouterOS partition
-          echo "Extracting the modified RouterOS image from the loop device..."
-          
-          # Alternative approach using dd directly
-          if [ ! -f chr-modified.img ]; then
-            # If the loop device approach failed, try 7z to work with direct image files
-            echo "Using alternative approach with 7z..."
-            
-            # Create required directories in the RouterOS file structure
-            mkdir -p router_files/rw/store/
-            
-            # Copy the startup script
-            cp scripts/startup.rsc router_files/rw/store/
-            
-            # Create a tar file with the startup.rsc in the correct location
-            cd router_files
-            tar -cf ../startup.tar rw/
-            cd ..
-            
-            # Convert the modified disk image back to use as output
-            mv chr.img chr-modified.img
-          fi
 
       - name: Compress modified image
         if: steps.check.outputs.skip == 'false'
