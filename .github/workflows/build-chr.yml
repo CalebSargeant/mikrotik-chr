@@ -7,6 +7,7 @@ on:
   push:
     paths:
       - "scripts/startup.rsc"
+      - ".github/workflows/build-chr.yml"
 
 jobs:
   build-chr:
@@ -60,7 +61,7 @@ jobs:
         if: steps.check.outputs.skip == 'false'
         run: |
           sudo apt-get update
-          sudo apt-get install -y p7zip-full
+          sudo apt-get install -y p7zip-full qemu-utils
 
       - name: Download latest CHR image
         if: steps.check.outputs.skip == 'false'
@@ -73,43 +74,56 @@ jobs:
       - name: Inject configuration
         if: steps.check.outputs.skip == 'false'
         run: |
-          # Extract the CHR image
-          mkdir -p chr_extracted
-          7z x chr.img -o./chr_extracted
+          # Create a temporary directory for mounting
+          mkdir -p mnt
           
-          # List the contents to understand structure
-          echo "Contents of the extracted CHR image:"
-          ls -la chr_extracted/
+          # Create a working copy of the image
+          cp chr.img chr-modified.img
           
-          # Extract the RouterOS partition
-          mkdir -p router_extracted
-          7z x chr_extracted/1.RouterOS.img -o./router_extracted || true
+          # Expand the image to have room for modifications (if needed)
+          qemu-img resize chr-modified.img +20M
           
-          # List extracted contents
-          echo "Contents of the RouterOS partition:"
-          ls -la router_extracted/
+          # Use fdisk to check partition information
+          echo "Partition information:"
+          fdisk -l chr-modified.img
           
-          # Create the directory structure
-          mkdir -p router_extracted/rw/store/
+          # Calculate the start offset of the second partition (RouterOS partition)
+          # Standard sector size is 512 bytes
+          SECTOR_SIZE=512
+          SECOND_PART_START=$(fdisk -l chr-modified.img | grep "1.RouterOS.img" | awk '{print $2}')
+          
+          if [ -z "$SECOND_PART_START" ]; then
+            echo "Could not determine the start of the RouterOS partition"
+            SECOND_PART_START=$(fdisk -l chr-modified.img | grep -A1 "Device" | tail -1 | awk '{print $2}')
+            echo "Using alternative method to find partition: $SECOND_PART_START"
+          fi
+          
+          # Calculate offset in bytes
+          OFFSET=$(($SECOND_PART_START * $SECTOR_SIZE))
+          echo "Mounting partition at offset: $OFFSET"
+          
+          # Mount the RouterOS partition
+          sudo mount -o loop,offset=$OFFSET chr-modified.img mnt
+          
+          # Display mounted contents
+          echo "Mounted filesystem contents:"
+          ls -la mnt/
+          
+          # Create directory structure if it doesn't exist
+          sudo mkdir -p mnt/rw/store/
           
           # Copy the startup script
-          cp scripts/startup.rsc router_extracted/rw/store/
+          sudo cp scripts/startup.rsc mnt/rw/store/
           
-          # Repack the RouterOS partition
-          cd router_extracted
-          7z a -r ../modified-routeros.img .
-          cd ..
+          # Display final contents to verify
+          echo "Content of rw/store after copy:"
+          ls -la mnt/rw/store/
           
-          # Replace the original RouterOS partition
-          mv modified-routeros.img chr_extracted/1.RouterOS.img
+          # Unmount
+          sudo umount mnt
           
-          # Repack the CHR image
-          cd chr_extracted
-          7z a -r ../modified-chr.img .
-          cd ..
-          
-          # Use the modified image
-          mv modified-chr.img chr.img
+          # Replace the original image
+          mv chr-modified.img chr.img
 
       - name: Compress modified image
         if: steps.check.outputs.skip == 'false'
