@@ -75,8 +75,9 @@ jobs:
           # Extract the CHR image
           7z x chr.img -o./chr
           ls -hal
-          7z x ./chr/RouterOS.img -o./chr/router
-          ls -hal ./chr
+          cd ./chr
+          7z x RouterOS.img -o./chr/router
+          cd router
           ls -hal ./chr/router
           
           # Create directory structure
