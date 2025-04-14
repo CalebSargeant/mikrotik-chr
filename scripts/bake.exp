@@ -51,11 +51,12 @@ expect {
         send "/ip/service/disable ftp,www,telnet,api\r"
         expect -re "] >"
 
-        # Define the script content properly as a single string
-        set script_content ":delay 5;\r\n:foreach iface in=\[/interface ethernet find where running=yes\] do={\r\n  /ip dhcp-client add interface=\[/interface get \\\$iface name\] disabled=no;\r\n  /system script remove startup-dhcp;\r\n  :log info \"DHCP setup done on \[/interface get \\\$iface name\]\";\r\n  break;\r\n}"
+        # Mount the host filesystem
+        send "/filesystem mount hostshare\r"
+        expect -re "] >"
 
-        # Add the script with its content
-        send "/system script add name=startup-dhcp source=\"$script_content\"\r"
+        # Import the script from the startup.rsc file
+        send "/system script add name=startup-dhcp source=\[/file get hostshare/startup.rsc contents\]\r"
         expect -re "] >"
 
         # Add scheduler to run script on startup
