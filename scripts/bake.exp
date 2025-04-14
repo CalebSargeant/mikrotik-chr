@@ -39,8 +39,12 @@ expect {
     -re "] >" {
         send "/system identity set name=chr\r"
         send "/ip/service/disable ftp,www,telnet,api\r"
-        send "/system script edit startup-dhcp source\r"
 
+        # Create empty script first
+        send "/system script add name=startup-dhcp\r"
+
+        # Then edit its source
+        send "/system script edit startup-dhcp source\r"
         expect {
             -re "value-name: source" {
                 send ":delay 5;\r"
@@ -55,6 +59,7 @@ expect {
             timeout { puts "Timeout editing script source."; exit 1 }
         }
 
+        # Add scheduler to run it once at startup
         send "/system scheduler add name=run-once-dhcp on-event=startup-dhcp start-time=startup interval=0s\r"
     }
     timeout { puts "Timeout waiting for command prompt after password change."; exit 1 }
