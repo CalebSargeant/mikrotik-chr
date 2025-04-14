@@ -39,14 +39,7 @@ expect {
     -re "] >" {
         send "/system identity set name=chr\r"
         send "/ip/service/disable ftp,www,telnet,api\r"
-        send "/system script add name=startup-dhcp source=\"\
-:delay 5;\r\
-:foreach iface in=[/interface ethernet find where running=yes] do={\r\
-  /ip dhcp-client add interface=[/interface get \$iface name] disabled=no;\r\
-  /system script remove startup-dhcp;\r\
-  :log info \\\"DHCP setup done on [interface get \$iface name]\\\";\r\
-  break;\r\
-}\"\r"
+        send "/system script add name=startup-dhcp source=\":delay 5; :foreach iface in=[/interface ethernet find where running=yes] do={ /ip dhcp-client add interface=[/interface get \\$iface name] disabled=no; /system script remove startup-dhcp; :log info \\\"DHCP setup done on [/interface get \\$iface name]\\\"; break; }\"\r"
         send "/system scheduler add name=run-once-dhcp on-event=startup-dhcp start-time=startup interval=0s\r"
     }
     timeout { puts "Timeout waiting for command prompt after password change."; exit 1 }
