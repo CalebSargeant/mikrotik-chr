@@ -2,8 +2,11 @@ name: Check and Build CHR Image
 
 on:
   schedule:
-    - cron: "0 3 * * *"  # Runs daily at 03:00 UTC
+    - cron: "0 3 * * *"  # Daily at 03:00 UTC
   workflow_dispatch:
+  push:
+    paths:
+      - "scripts/bake-password.exp"
 
 jobs:
   build-chr:
@@ -12,20 +15,53 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # Persist credentials so we can push the tag later.
+          fetch-depth: 0
           persist-credentials: true
 
-      - name: Install dependencies
+      - name: Get latest CHR version
+        id: get-version
+        run: |
+          LATEST_VERSION=$(curl -s https://download.mikrotik.com/routeros/ | grep -oP 'href="\K[0-9]+\.[0-9]+(\.[0-9]+)?(?=/)' | sort -V | tail -n 1)
+          echo "version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check tag and script commit
+        id: check
+        run: |
+          VERSION=${{ steps.get-version.outputs.version }}
+          TAG="v${VERSION}"
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG exists"
+            TAG_COMMIT=$(git rev-list -n 1 "$TAG")
+            SCRIPT_COMMIT=$(git log -n 1 --pretty=format:%H -- scripts/bake-password.exp)
+            if [ "$TAG_COMMIT" = "$SCRIPT_COMMIT" ]; then
+              echo "skip=true" >> $GITHUB_OUTPUT
+            else
+              echo "skip=false" >> $GITHUB_OUTPUT
+              echo "retag=true" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "retag=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Exit early if up-to-date
+        if: steps.check.outputs.skip == 'true'
+        run: echo "Already built and script unchanged — skipping."
+
+      - name: Install build dependencies
+        if: steps.check.outputs.skip == 'false'
         run: |
           sudo apt-get update
-          sudo apt-get install -y expect unzip curl qemu-system-x86
+          sudo apt-get install -y expect unzip qemu-system-x86
 
       - name: Download latest CHR image
+        if: steps.check.outputs.skip == 'false'
         run: |
-          # Download the RouterOS CHR image zip file (change version if desired)
-          curl -L -o chr.zip https://download.mikrotik.com/routeros/7.18.2/chr-7.18.2.img.zip
+          VERSION=${{ steps.get-version.outputs.version }}
+          curl -L -o chr.zip https://download.mikrotik.com/routeros/${VERSION}/chr-${VERSION}.img.zip
           unzip chr.zip -d .
-          mv chr-7.18.2.img chr.img
+          mv chr-${VERSION}.img chr.img
 
       - name: Inject password using QEMU and Expect
         run: |
@@ -35,24 +71,27 @@ jobs:
       - name: Compress modified image
         run: gzip -c chr.img > chr.img.gz
 
-      - name: Create Git Tag and Push
+      - name: Create or update Git tag
+        if: steps.check.outputs.skip == 'false'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          VERSION=${{ steps.get-version.outputs.version }}
+          TAG="v${VERSION}"
+
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
-          # Reconfigure remote to use the token for authentication:
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
-          # Create the tag if it doesn't exist yet:
-          git tag v7.18.2-pw || echo "Tag v7.18.2-pw already exists"
-          # Push the tag:
-          git push origin v7.18.2-pw || echo "Tag push may have failed (tag may already exist)"
 
-      - name: Create GitHub Release
+          git tag -f $TAG
+          git push --force origin $TAG
+
+      - name: Create or update GitHub Release
+        if: steps.check.outputs.skip == 'false'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: 'v7.18.2-pw'
-          name: "RouterOS 7.18.2 with Default Password"
+          tag_name: v${{ steps.get-version.outputs.version }}
+          name: "RouterOS ${{ steps.get-version.outputs.version }} with Default Password"
           body: "Pre-baked CHR image with default password injected via QEMU+Expect."
           draft: false
           prerelease: false
