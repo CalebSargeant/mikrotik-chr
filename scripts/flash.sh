@@ -6,7 +6,7 @@
 set +e
 
 echo "Downloading and flashing CHR image..."
-curl -L "https://github.com/CalebSargeant/mikrotik-chr/releases/download/v7.18.2-pw/chr.img.gz" | gunzip | dd of=/dev/sda bs=1M || :
+curl -L "https://github.com/CalebSargeant/mikrotik-chr/releases/download/v7.18.2/chr.img.gz" | gunzip | dd of=/dev/sda bs=1M || :
 
 echo "Initiating reboot..."
 nohup reboot >/dev/null 2>&1 &
