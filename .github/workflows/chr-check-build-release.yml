@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - "scripts/bake.exp"
+      - "scripts/startup.rsc"
 
 jobs:
   build-chr:
@@ -60,7 +60,7 @@ jobs:
         if: steps.check.outputs.skip == 'false'
         run: |
           sudo apt-get update
-          sudo apt-get install -y expect unzip qemu-system-x86
+          sudo apt-get install -y p7zip-full
 
       - name: Download latest CHR image
         if: steps.check.outputs.skip == 'false'
@@ -70,10 +70,25 @@ jobs:
           unzip chr.zip -d .
           mv chr-${VERSION}.img chr.img
 
-      - name: Inject config using QEMU and Expect
+      - name: Inject configuration
         run: |
-          chmod +x ./scripts/bake.exp
-          ./scripts/bake.exp
+          # Extract the CHR image
+          7z x chr.img -o./chr
+          7z x RouterOS.img -o./chr/router
+          
+          # Create directory structure
+          mkdir -p ./chr/router/rw/store/
+          
+          # Copy the startup script
+          cp scripts/startup.rsc ./chr/router/rw/store/
+          
+          # Repack the image
+          cd ./chr
+          7z a -r ../modified-RouterOS.img router/
+          cd ..
+          
+          # Update the original image with our modified version
+          7z u chr.img modified-RouterOS.img
 
       - name: Compress modified image
         run: gzip -c chr.img > chr.img.gz
