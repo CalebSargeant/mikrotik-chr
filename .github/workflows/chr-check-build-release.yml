@@ -76,9 +76,10 @@ jobs:
           7z x chr.img -o./chr
           ls -hal
           cd ./chr
-          7z x RouterOS.img -o./chr/router
+          7z x RouterOS.img -o./router
           cd router
           ls -hal ./chr/router
+          cd ../..
           
           # Create directory structure
           mkdir -p ./chr/router/rw/store/
