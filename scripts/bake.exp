@@ -47,12 +47,12 @@ expect {
     -re "] >" {
         send "/system identity set name=chr\r"
         send "/ip/service/disable ftp,www,telnet,api\r"
-
-        # Import directly from the mounted folder (hostshare)
+        send ":put [/file find name~\"startup\"]\r"
+        expect "] >"
         send "/import file-name=/host/hostshare/startup.rsc\r"
         expect {
-            -re "] >" { puts "✅ startup.rsc imported successfully" }
-            timeout { puts "❌ Failed to import startup.rsc"; exit 1 }
+        -re "] >" { puts "✅ Imported startup.rsc successfully" }
+        timeout { puts "❌ Import failed"; exit 1 }
         }
     }
     timeout { puts "Timeout waiting for prompt after password change."; exit 1 }
