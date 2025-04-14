@@ -6,7 +6,6 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - ".github/workflows/chr-check-build-release.yml"
       - "scripts/startup.rsc"
 
 jobs:
@@ -82,37 +81,35 @@ jobs:
           echo "Contents of the extracted CHR image:"
           ls -la chr_extracted/
           
-          # Find the data partition
-          if [ -f chr_extracted/primary-data.img ]; then
-            # Extract it
-            mkdir -p data_extracted
-            7z x chr_extracted/primary-data.img -o./data_extracted || true
-            
-            # Create the structure we need
-            mkdir -p data_extracted/rw/store/
-            
-            # Copy the startup script
-            cp scripts/startup.rsc data_extracted/rw/store/
-            
-            # Repack the data partition
-            cd data_extracted
-            7z a -r ../modified-data.img .
-            cd ..
-            
-            # Replace the original data partition
-            mv modified-data.img chr_extracted/primary-data.img
-            
-            # Repack the CHR image
-            cd chr_extracted
-            7z a -r ../modified-chr.img .
-            cd ..
-            
-            # Use the modified image
-            mv modified-chr.img chr.img
-          else
-            echo "Could not find expected structure in CHR image"
-            exit 1
-          fi
+          # Extract the RouterOS partition
+          mkdir -p router_extracted
+          7z x chr_extracted/1.RouterOS.img -o./router_extracted || true
+          
+          # List extracted contents
+          echo "Contents of the RouterOS partition:"
+          ls -la router_extracted/
+          
+          # Create the directory structure
+          mkdir -p router_extracted/rw/store/
+          
+          # Copy the startup script
+          cp scripts/startup.rsc router_extracted/rw/store/
+          
+          # Repack the RouterOS partition
+          cd router_extracted
+          7z a -r ../modified-routeros.img .
+          cd ..
+          
+          # Replace the original RouterOS partition
+          mv modified-routeros.img chr_extracted/1.RouterOS.img
+          
+          # Repack the CHR image
+          cd chr_extracted
+          7z a -r ../modified-chr.img .
+          cd ..
+          
+          # Use the modified image
+          mv modified-chr.img chr.img
 
       - name: Compress modified image
         if: steps.check.outputs.skip == 'false'
