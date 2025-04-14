@@ -51,29 +51,11 @@ expect {
         send "/ip/service/disable ftp,www,telnet,api\r"
         expect -re "] >"
 
-        # Add the DHCP script line by line instead of as one big string
-        send "/system script add name=startup-dhcp\r"
-        expect -re "] >"
+        # Define the script content properly as a single string
+        set script_content ":delay 5;\r\n:foreach iface in=\[/interface ethernet find where running=yes\] do={\r\n  /ip dhcp-client add interface=\[/interface get \\\$iface name\] disabled=no;\r\n  /system script remove startup-dhcp;\r\n  :log info \"DHCP setup done on \[/interface get \\\$iface name\]\";\r\n  break;\r\n}"
 
-        send "/system script set startup-dhcp source=\":delay 5\r\n"
-        expect -re "] >"
-
-        send ":foreach iface in=\[/interface ethernet find where running=yes\] do={\r\n"
-        expect -re "] >"
-
-        send "  /ip dhcp-client add interface=\[/interface get \\\$iface name\] disabled=no\r\n"
-        expect -re "] >"
-
-        send "  /system script remove startup-dhcp\r\n"
-        expect -re "] >"
-
-        send "  :log info \\\"DHCP setup done on \[/interface get \\\$iface name\]\\\"\r\n"
-        expect -re "] >"
-
-        send "  break\r\n"
-        expect -re "] >"
-
-        send "}\"\r"
+        # Add the script with its content
+        send "/system script add name=startup-dhcp source=\"$script_content\"\r"
         expect -re "] >"
 
         # Add scheduler to run script on startup
