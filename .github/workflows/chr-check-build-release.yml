@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
   push:
     paths:
+      - ".github/workflows/chr-check-build-release.yml"
       - "scripts/startup.rsc"
 
 jobs:
@@ -40,7 +41,7 @@ jobs:
           if git rev-parse "$TAG" >/dev/null 2>&1; then
             echo "Tag $TAG exists"
             TAG_COMMIT=$(git rev-list -n 1 "$TAG")
-            SCRIPT_COMMIT=$(git log -n 1 --pretty=format:%H -- scripts/bake.exp)
+            SCRIPT_COMMIT=$(git log -n 1 --pretty=format:%H -- scripts/startup.rsc)
             if [ "$TAG_COMMIT" = "$SCRIPT_COMMIT" ]; then
               echo "skip=true" >> $GITHUB_OUTPUT
             else
@@ -71,31 +72,50 @@ jobs:
           mv chr-${VERSION}.img chr.img
 
       - name: Inject configuration
+        if: steps.check.outputs.skip == 'false'
         run: |
           # Extract the CHR image
-          7z x chr.img -o./chr
-          ls -hal
-          cd ./chr
-          7z x RouterOS.img -o./router
-          cd router
-          ls -hal ./chr/router
-          cd ../..
+          mkdir -p chr_extracted
+          7z x chr.img -o./chr_extracted
           
-          # Create directory structure
-          mkdir -p ./chr/router/rw/store/
+          # List the contents to understand structure
+          echo "Contents of the extracted CHR image:"
+          ls -la chr_extracted/
           
-          # Copy the startup script
-          cp scripts/startup.rsc ./chr/router/rw/store/
-          
-          # Repack the image
-          cd ./chr
-          7z a -r ../modified-RouterOS.img router/
-          cd ..
-          
-          # Update the original image with our modified version
-          7z u chr.img modified-RouterOS.img
+          # Find the data partition
+          if [ -f chr_extracted/primary-data.img ]; then
+            # Extract it
+            mkdir -p data_extracted
+            7z x chr_extracted/primary-data.img -o./data_extracted || true
+            
+            # Create the structure we need
+            mkdir -p data_extracted/rw/store/
+            
+            # Copy the startup script
+            cp scripts/startup.rsc data_extracted/rw/store/
+            
+            # Repack the data partition
+            cd data_extracted
+            7z a -r ../modified-data.img .
+            cd ..
+            
+            # Replace the original data partition
+            mv modified-data.img chr_extracted/primary-data.img
+            
+            # Repack the CHR image
+            cd chr_extracted
+            7z a -r ../modified-chr.img .
+            cd ..
+            
+            # Use the modified image
+            mv modified-chr.img chr.img
+          else
+            echo "Could not find expected structure in CHR image"
+            exit 1
+          fi
 
       - name: Compress modified image
+        if: steps.check.outputs.skip == 'false'
         run: gzip -c chr.img > chr.img.gz
 
       - name: Create or update Git tag
@@ -119,7 +139,7 @@ jobs:
         with:
           tag_name: v${{ steps.get-version.outputs.version }}
           name: "MikroTik CHR ${{ steps.get-version.outputs.version }}"
-          body: "Pre-baked CHR image with default password, dhcp-client enabled, and disabled ftp,www,telnet,api, injected via QEMU+Expect."
+          body: "Pre-baked CHR image with default password, dhcp-client enabled, and disabled ftp,www,telnet,api, injected configuration."
           draft: false
           prerelease: false
           files: chr.img.gz
