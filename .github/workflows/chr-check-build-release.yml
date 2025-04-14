@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
@@ -33,8 +33,15 @@ jobs:
       - name: Compress modified image
         run: gzip -c chr.img > chr.img.gz
 
-      - name: Create GitHub release
-        uses: softprops/action-gh-release@v1
+      - name: Create Git Tag
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git tag v7.18.2-pw
+          git push origin v7.18.2-pw
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: 'v7.18.2-pw'
           name: "RouterOS 7.18.2 with Default Password"
