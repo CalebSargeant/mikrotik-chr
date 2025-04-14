@@ -1,0 +1,46 @@
+name: Check and Build CHR Image
+
+on:
+  schedule:
+    - cron: "0 3 * * *"  # Runs daily at 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  build-chr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y expect unzip curl qemu-system-x86
+
+      - name: Download latest CHR image
+        run: |
+          # Download the RouterOS CHR image zip file (adjust version as needed)
+          curl -L -o chr.zip https://download.mikrotik.com/routeros/7.18.2/chr-7.18.2.img.zip
+          unzip chr.zip -d .
+          # Rename to a standard filename
+          mv chr-7.18.2.img chr.img
+
+      - name: Inject password using QEMU and Expect
+        run: |
+          chmod +x ./scripts/bake-password.exp
+          ./scripts/bake-password.exp
+
+      - name: Compress modified image
+        run: gzip -c chr.img > chr.img.gz
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: 'v7.18.2-pw'
+          name: "RouterOS 7.18.2 with Default Password"
+          body: "Pre-baked CHR image with default password injected via QEMU+Expect."
+          draft: false
+          prerelease: false
+          files: chr.img.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
