@@ -77,62 +77,36 @@ jobs:
           # Create a modified image
           cp chr.img chr-modified.img
           
-          # Extract the CHR image to work with the RouterOS partition
-          mkdir -p chr_extracted
-          7z x chr.img -o./chr_extracted
-          
-          # Check the directory contents
-          echo "CHR Image contents:"
-          ls -la chr_extracted/
-          
-          # Create a loopback device from the RouterOS partition 
-          LOOP_DEVICE=$(sudo losetup -f)
-          echo "Using loop device: $LOOP_DEVICE"
-          sudo losetup -P $LOOP_DEVICE chr.img
-          
-          # Wait for partitions to be detected
-          sleep 2
-          
-          # List all loop partitions
-          echo "Loop device partitions:"
-          ls -la ${LOOP_DEVICE}p*
-          
-          # Create temp directory for mounting
+          # Create mount point
           mkdir -p mnt
           
-          # Try to mount the second partition
-          echo "Mounting partition ${LOOP_DEVICE}p2"
-          sudo mount ${LOOP_DEVICE}p2 mnt
+          # Mount the RouterOS system partition with specific offset
+          sudo mount -o loop,offset=512 chr.img mnt
           
-          # Check mount status
+          # Verify mount was successful
           echo "Mount status:"
           mount | grep mnt
           
-          # List the mounted filesystem
+          # List the mounted filesystem contents
           echo "Mounted filesystem contents:"
           ls -la mnt/
           
-          # Create the directory structure
-          sudo mkdir -p mnt/rw/store/
-          
-          # Copy the startup script to both locations - for redundancy
-          sudo cp scripts/startup.rsc mnt/rw/store/
+          # Copy the startup script to the root as autorun.rsc
           sudo cp scripts/startup.rsc mnt/autorun.rsc
           
-          # Verify the files were copied
-          echo "Content of rw/store after copy:"
-          ls -la mnt/rw/store/
+          # Make sure the script has proper permissions
+          sudo chmod 755 mnt/autorun.rsc
+          
+          # Verify the file was copied
           echo "Content of root directory after copy:"
           ls -la mnt/ | grep autorun.rsc
           
-          # Sync to ensure all writes are complete
+          # Properly sync and unmount
           sudo sync
-          
-          # Unmount filesystem
           sudo umount mnt
           
-          # Detach loop device
-          sudo losetup -d $LOOP_DEVICE
+          # Create the final output image
+          mv chr-modified.img chr-modified-final.img
 
       - name: Compress modified image
         if: steps.check.outputs.skip == 'false'
