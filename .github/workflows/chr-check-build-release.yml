@@ -21,7 +21,14 @@ jobs:
       - name: Get latest CHR version
         id: get-version
         run: |
-          LATEST_VERSION=$(curl -s https://download.mikrotik.com/routeros/ | grep -oP 'href="\K[0-9]+\.[0-9]+(\.[0-9]+)?(?=/)' | sort -V | tail -n 1)
+          LATEST_VERSION=$(curl -s "https://mikrotik.com/download" \
+            | grep -o 'chr-[0-9]\.[0-9]\+\.[0-9]\+\.img\.zip' \
+            | grep -v "beta" \
+            | grep -v "rc" \
+            | sort -V \
+            | tail -n 1 \
+            | sed 's/chr-\(.*\)\.img\.zip/\1/')
+          echo "Latest version: $LATEST_VERSION"
           echo "version=$LATEST_VERSION" >> $GITHUB_OUTPUT
 
       - name: Check tag and script commit
