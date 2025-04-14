@@ -47,12 +47,19 @@ expect {
     -re "] >" {
         send "/system identity set name=chr\r"
         send "/ip/service/disable ftp,www,telnet,api\r"
-        send ":put [/file find name~\"startup\"]\r"
-        expect "] >"
+
+        # Debug: confirm hostshare is visible
+        send ":put \\[/file find name~\\\"startup\\\"\\]\r"
+        expect {
+            -re "] >" { puts "✅ /file find printed something (hostshare likely visible)" }
+            timeout { puts "❌ /file find didn't respond (hostshare probably missing)"; exit 1 }
+        }
+
+        # Try the import
         send "/import file-name=/host/hostshare/startup.rsc\r"
         expect {
-        -re "] >" { puts "✅ Imported startup.rsc successfully" }
-        timeout { puts "❌ Import failed"; exit 1 }
+            -re "] >" { puts "✅ Imported startup.rsc successfully" }
+            timeout { puts "❌ Import failed"; exit 1 }
         }
     }
     timeout { puts "Timeout waiting for prompt after password change."; exit 1 }
