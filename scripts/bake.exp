@@ -49,19 +49,15 @@ expect {
         send "/ip/service/disable ftp,www,telnet,api\r"
         expect -re "] >"
 
-        # Directly set up DHCP on the first Ethernet interface
-        send "/ip dhcp-client add interface=ether1 disabled=no\r"
+        # Create a separate delayed startup script to handle DHCP
+        send "/system script add name=configure-dhcp source={ :delay 10s; :foreach i in=[/interface ethernet find] do={ /ip dhcp-client add interface=[/interface get \$i name] disabled=no } }\r"
         expect -re "] >"
 
-        # Add a simple startup script for future boots - single line to avoid issues
-        send "/system script add name=startup-script source=\"/ip dhcp-client add interface=ether1 disabled=no\"\r"
+        # Add scheduler to run on startup
+        send "/system scheduler add name=run-dhcp-setup on-event=configure-dhcp start-time=startup interval=0\r"
         expect -re "] >"
 
-        # Schedule the script to run at startup
-        send "/system scheduler add name=run-at-startup on-event=startup-script start-time=startup interval=0\r"
-        expect -re "] >"
-
-        puts "✅ Basic configuration completed successfully"
+        puts "✅ Added DHCP startup script and scheduler successfully"
     }
     timeout { puts "Timeout waiting for prompt after password change."; exit 1 }
 }
