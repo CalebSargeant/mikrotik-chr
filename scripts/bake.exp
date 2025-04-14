@@ -46,32 +46,46 @@ expect {
 expect {
     -re "] >" {
         send "/system identity set name=chr\r"
-        send "/ip/service/disable ftp,www,telnet,api\r"
+        expect -re "] >"
 
-        # Add DHCP script directly
-        send "/system script add name=startup-dhcp source=\":delay 5\\r\\n:foreach iface in=\[/interface ethernet find where running=yes\] do={\\r\\n  /ip dhcp-client add interface=\[/interface get \\\$iface name\] disabled=no\\r\\n  /system script remove startup-dhcp\\r\\n  :log info \\\\\\\"DHCP setup done on \[/interface get \\\$iface name\]\\\\\\\"\\r\\n  break\\r\\n}\"\r"
+        send "/ip/service/disable ftp,www,telnet,api\r"
+        expect -re "] >"
+
+        # Add the DHCP script line by line instead of as one big string
+        send "/system script add name=startup-dhcp\r"
+        expect -re "] >"
+
+        send "/system script set startup-dhcp source=\":delay 5\r\n"
+        expect -re "] >"
+
+        send ":foreach iface in=\[/interface ethernet find where running=yes\] do={\r\n"
+        expect -re "] >"
+
+        send "  /ip dhcp-client add interface=\[/interface get \\\$iface name\] disabled=no\r\n"
+        expect -re "] >"
+
+        send "  /system script remove startup-dhcp\r\n"
+        expect -re "] >"
+
+        send "  :log info \\\"DHCP setup done on \[/interface get \\\$iface name\]\\\"\r\n"
+        expect -re "] >"
+
+        send "  break\r\n"
+        expect -re "] >"
+
+        send "}\"\r"
+        expect -re "] >"
 
         # Add scheduler to run script on startup
         send "/system scheduler add name=run-startup-dhcp on-event=startup-dhcp start-time=startup interval=0\r"
+        expect -re "] >"
 
-        expect {
-            -re "] >" { puts "✅ Added DHCP startup script successfully" }
-            timeout { puts "❌ Failed to add startup script"; exit 1 }
-        }
+        puts "✅ Added DHCP startup script and scheduler successfully"
     }
     timeout { puts "Timeout waiting for prompt after password change."; exit 1 }
 }
 
-# Run the script now to set up DHCP on current boot
-expect {
-    -re "] >" {
-        send "/system script run startup-dhcp\r"
-        puts "✅ Running DHCP setup script"
-    }
-    timeout { puts "Timeout waiting for command prompt to run script."; exit 1 }
-}
-
-# Wait for confirmation
+# Exit the router
 expect {
     -re "] >" { send "/quit\r" }
     timeout { puts "Timeout waiting for command prompt to quit."; exit 1 }
