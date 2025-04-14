@@ -39,7 +39,7 @@ expect {
     -re "] >" {
         # Optionally, you can set other parameters such as system identity here.
         send "/system identity set name=chr\r"
-        send ":foreach iface in=[/interface ethernet find] do={/ip dhcp-client add interface=[/interface get $iface name] disabled=no}\r"
+        send "/ip/dhcp-client/add interface=ether2 disabled=no"
         send "/ip/service/disable ftp,www,telnet,api"
     }
     timeout { puts "Timeout waiting for command prompt after password change."; exit 1 }
