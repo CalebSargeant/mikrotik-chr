@@ -2,7 +2,7 @@
 set timeout 60
 
 # Start QEMU to boot the CHR image
-spawn qemu-system-x86_64 -m 256 -nographic -drive file=chr.img,format=raw
+spawn qemu-system-x86_64 -m 256 -nographic -drive file=chr.img,format=raw -netdev user,id=n1 -device e1000,netdev=n1
 
 # Expect the login prompt and send "admin"
 expect {
@@ -39,7 +39,7 @@ expect {
     -re "] >" {
         # Optionally, you can set other parameters such as system identity here.
         send "/system identity set name=chr\r"
-        send "/ip/dhcp-client/add interface=ether2 disabled=no\r"
+        send "/ip/dhcp-client/add interface=ether1 disabled=no\r"
         send "/ip/service/disable ftp,www,telnet,api\r"
     }
     timeout { puts "Timeout waiting for command prompt after password change."; exit 1 }
