@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - "scripts/bake-password.exp"
+      - "scripts/bake.exp"
 
 jobs:
   build-chr:
@@ -40,7 +40,7 @@ jobs:
           if git rev-parse "$TAG" >/dev/null 2>&1; then
             echo "Tag $TAG exists"
             TAG_COMMIT=$(git rev-list -n 1 "$TAG")
-            SCRIPT_COMMIT=$(git log -n 1 --pretty=format:%H -- scripts/bake-password.exp)
+            SCRIPT_COMMIT=$(git log -n 1 --pretty=format:%H -- scripts/bake.exp)
             if [ "$TAG_COMMIT" = "$SCRIPT_COMMIT" ]; then
               echo "skip=true" >> $GITHUB_OUTPUT
             else
@@ -70,10 +70,10 @@ jobs:
           unzip chr.zip -d .
           mv chr-${VERSION}.img chr.img
 
-      - name: Inject password using QEMU and Expect
+      - name: Inject config using QEMU and Expect
         run: |
-          chmod +x ./scripts/bake-password.exp
-          ./scripts/bake-password.exp
+          chmod +x ./scripts/bake.exp
+          ./scripts/bake.exp
 
       - name: Compress modified image
         run: gzip -c chr.img > chr.img.gz
@@ -98,8 +98,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.get-version.outputs.version }}
-          name: "RouterOS ${{ steps.get-version.outputs.version }} with Default Password"
-          body: "Pre-baked CHR image with default password injected via QEMU+Expect."
+          name: "MikroTik CHR ${{ steps.get-version.outputs.version }}"
+          body: "Pre-baked CHR image with default password, dhcp-client enabled, and disabled ftp,www,telnet,api, injected via QEMU+Expect."
           draft: false
           prerelease: false
           files: chr.img.gz
