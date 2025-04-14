@@ -7,10 +7,7 @@ spawn qemu-system-x86_64 \
     -nographic \
     -drive file=chr.img,format=raw \
     -netdev user,id=n1 \
-    -device e1000,netdev=n1 \
-    -virtfs local,path=.,mount_tag=hostshare,security_model=none \
-    -fsdev local,id=myid,path=.,security_model=none \
-    -device virtio-9p-pci,fsdev=myid,mount_tag=hostshare
+    -device e1000,netdev=n1
 
 # Login
 expect {
@@ -42,24 +39,29 @@ expect {
     timeout { puts "Timeout waiting for repeat new password prompt."; exit 1 }
 }
 
-# Wait for command prompt
+# Wait for command prompt and set up the router
 expect {
     -re "] >" {
+        # Basic setup commands
         send "/system identity set name=chr\r"
         expect -re "] >"
 
         send "/ip/service/disable ftp,www,telnet,api\r"
         expect -re "] >"
 
-        # Add the script with direct content (properly escaped)
-        send "/system script add name=startup-dhcp source=\":delay 5\r\n:foreach iface in=\[/interface ethernet find where running=yes\] do={\r\n  /ip dhcp-client add interface=\[/interface get \\\$iface name\] disabled=no\r\n  :log info \\\"DHCP setup done on \[/interface get \\\$iface name\]\\\"\r\n}\"\r"
+        # Directly set up DHCP on the first Ethernet interface
+        send "/ip dhcp-client add interface=ether1 disabled=no\r"
         expect -re "] >"
 
-        # Add scheduler to run script on startup
-        send "/system scheduler add name=run-startup-dhcp on-event=startup-dhcp start-time=startup interval=0\r"
+        # Add a simple startup script for future boots - single line to avoid issues
+        send "/system script add name=startup-script source=\"/ip dhcp-client add interface=ether1 disabled=no\"\r"
         expect -re "] >"
 
-        puts "✅ Added DHCP startup script and scheduler successfully"
+        # Schedule the script to run at startup
+        send "/system scheduler add name=run-at-startup on-event=startup-script start-time=startup interval=0\r"
+        expect -re "] >"
+
+        puts "✅ Basic configuration completed successfully"
     }
     timeout { puts "Timeout waiting for prompt after password change."; exit 1 }
 }
