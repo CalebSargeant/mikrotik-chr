@@ -2,75 +2,71 @@
 set timeout 60
 
 # Start QEMU to boot the CHR image
-spawn qemu-system-x86_64 -m 256 -nographic -drive file=chr.img,format=raw -netdev user,id=n1 -device e1000,netdev=n1
+spawn qemu-system-x86_64 \
+    -m 256 \
+    -nographic \
+    -drive file=chr.img,format=raw \
+    -netdev user,id=n1 \
+    -device e1000,netdev=n1 \
+    -virtfs local,path=.,mount_tag=hostshare,security_model=none \
+    -fsdev local,id=myid,path=.,security_model=none \
+    -device virtio-9p-pci,fsdev=myid,mount_tag=hostshare
 
-# Expect the login prompt and send "admin"
+# Login
 expect {
     "MikroTik Login:" { send "admin\r" }
     timeout { puts "Timeout waiting for login prompt."; exit 1 }
 }
 
-# Expect the password prompt; send a blank password (just newline)
+# Password
 expect {
     "Password:" { send "\r" }
     timeout { puts "Timeout waiting for password prompt."; exit 1 }
 }
 
-# Expect the license prompt; answer "n" to not display the license
+# License
 expect {
     -re "Do you want to see the software license.*" { send "n\r" }
     timeout { puts "Timeout waiting for license prompt."; exit 1 }
 }
 
-# Expect the prompt for a new password. This prompt is typically "new password>"
+# New password
 expect {
     -re "new password> *" { send "BvUaiPG7U3CiVesQXhFA\r" }
     timeout { puts "Timeout waiting for new password prompt."; exit 1 }
 }
 
-# Expect the prompt to repeat the new password.
+# Confirm new password
 expect {
     -re "repeat new password> *" { send "BvUaiPG7U3CiVesQXhFA\r" }
     timeout { puts "Timeout waiting for repeat new password prompt."; exit 1 }
 }
 
-# After setting the password, wait for the command prompt (usually ending with "] >")
+# Wait for command prompt
 expect {
     -re "] >" {
         send "/system identity set name=chr\r"
         send "/ip/service/disable ftp,www,telnet,api\r"
 
-        # Create empty script first
-        send "/system script add name=startup-dhcp\r"
+        # Fetch the startup.rsc file from the mounted folder
+        send "/tool fetch url=\"hostshare/startup.rsc\" dst-path=startup.rsc\r"
+        expect "] >"
 
-        # Then edit its source
-        send "/system script edit startup-dhcp source\r"
-        expect {
-            -re "value-name: source" {
-                send ":delay 5;\r"
-                send ":foreach iface in=[/interface ethernet find where running=yes] do={\r"
-                send "  /ip dhcp-client add interface=[/interface get \$iface name] disabled=no;\r"
-                send "  /system script remove startup-dhcp;\r"
-                send "  :log info \\\"DHCP setup done on [/interface get \$iface name]\\\";\r"
-                send "  break;\r"
-                send "}\r"
-                send "\004"
-            }
-            timeout { puts "Timeout editing script source."; exit 1 }
-        }
+        # Import it
+        send "/import file-name=startup.rsc\r"
+        expect "] >"
 
-        # Add scheduler to run it once at startup
-        send "/system scheduler add name=run-once-dhcp on-event=startup-dhcp start-time=startup interval=0s\r"
+        # Clean up
+        send "/file remove startup.rsc\r"
     }
-    timeout { puts "Timeout waiting for command prompt after password change."; exit 1 }
+    timeout { puts "Timeout waiting for prompt after password change."; exit 1 }
 }
 
-# Allow a moment for the command to take effect, then quit the session.
+# Exit the router
 expect {
     -re "] >" { send "/quit\r" }
     timeout { puts "Timeout waiting for command prompt to quit."; exit 1 }
 }
 
-# Wait for QEMU to shut down (EOF)
 expect eof
 exit 0
