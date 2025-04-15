@@ -86,7 +86,7 @@ jobs:
 
       - name: Compress modified image
         if: steps.check.outputs.skip == 'false'
-        run: gzip -c chr-modified.img > chr.img.gz
+        run: gzip -c chr.img > chr.img.gz
 
       - name: Create or update Git tag
         if: steps.check.outputs.skip == 'false'
