@@ -61,7 +61,7 @@ jobs:
         if: steps.check.outputs.skip == 'false'
         run: |
           sudo apt-get update
-          sudo apt-get install -y p7zip-full qemu-utils parted
+          sudo apt-get install -y libguestfs-tools unzip curl gzip
 
       - name: Download latest CHR image
         if: steps.check.outputs.skip == 'false'
@@ -71,42 +71,23 @@ jobs:
           unzip chr.zip -d .
           mv chr-${VERSION}.img chr.img
 
-      - name: Inject configuration
+      - name: Mount CHR image and inject config
         if: steps.check.outputs.skip == 'false'
         run: |
-          # Create a modified image
-          cp chr.img chr-modified.img
-          
-          # Create mount point
-          mkdir -p mnt
-          
-          # Mount the RouterOS system partition with specific offset
-          sudo mount -o loop,offset=512 chr.img mnt
-          
-          # Verify mount was successful
-          echo "Mount status:"
-          mount | grep mnt
-          
-          # List the mounted filesystem contents
-          echo "Mounted filesystem contents:"
-          ls -la mnt/
-          
-          # Copy the startup script to the root as autorun.rsc
-          sudo cp scripts/startup.rsc mnt/autorun.rsc
-          
-          # Make sure the script has proper permissions
-          sudo chmod 755 mnt/autorun.rsc
-          
-          # Verify the file was copied
-          echo "Content of root directory after copy:"
-          ls -la mnt/ | grep autorun.rsc
-          
-          # Properly sync and unmount
-          sudo sync
-          sudo umount mnt
-          
-          # Create the final output image
-          mv chr-modified.img chr-modified-final.img
+          mkdir mnt
+          # Mount the image using guestmount
+          guestmount -a chr.img -m /dev/sda1 --rw mnt
+      
+          # Inject your startup config
+          cp scripts/startup.rsc mnt/autorun.rsc
+      
+          # You can inject more files or tweak system settings here if needed
+      
+          # Unmount after modification
+          guestunmount mnt
+      
+          # Rename the modified image
+          mv chr.img chr-modified.img
 
       - name: Compress modified image
         if: steps.check.outputs.skip == 'false'
