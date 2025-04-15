@@ -83,8 +83,8 @@ jobs:
           echo "Checking available partitions on loop device:"
           lsblk $LOOP_DEV
       
-          echo "Mounting ${LOOP_DEV}p1 to /mnt/chr..."
-          sudo mount ${LOOP_DEV}p1 /mnt/chr
+          echo "Mounting ${LOOP_DEV}p2 to /mnt/chr..."
+          sudo mount ${LOOP_DEV}p2 /mnt/chr
       
           echo "Mounted image content:"
           sudo ls -lah /mnt/chr
