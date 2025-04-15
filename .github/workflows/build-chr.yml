@@ -71,23 +71,18 @@ jobs:
           unzip chr.zip -d .
           mv chr-${VERSION}.img chr.img
 
-      - name: Mount CHR image and inject config
-        if: steps.check.outputs.skip == 'false'
+      - name: Mount and modify image using loop device
         run: |
-          mkdir mnt
-          # Mount the image using guestmount
-          guestmount -a chr.img -m /dev/sda1 --rw mnt
+          sudo mkdir /mnt/chr
+          LOOP_DEV=$(sudo losetup --show -fP chr.img)
+          echo "Using loop device: $LOOP_DEV"
+          sudo mount ${LOOP_DEV}p1 /mnt/chr
       
-          # Inject your startup config
-          cp scripts/startup.rsc mnt/autorun.rsc
+          # Inject config
+          sudo cp scripts/startup.rsc /mnt/chr/autorun.rsc
       
-          # You can inject more files or tweak system settings here if needed
-      
-          # Unmount after modification
-          guestunmount mnt
-      
-          # Rename the modified image
-          mv chr.img chr-modified.img
+          sudo umount /mnt/chr
+          sudo losetup -d $LOOP_DEV
 
       - name: Compress modified image
         if: steps.check.outputs.skip == 'false'
