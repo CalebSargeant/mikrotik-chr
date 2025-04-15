@@ -73,16 +73,35 @@ jobs:
 
       - name: Mount and modify image using loop device
         run: |
-          sudo mkdir /mnt/chr
+          echo "Creating mount directory..."
+          sudo mkdir -p /mnt/chr
+      
+          echo "Attaching loop device to chr.img..."
           LOOP_DEV=$(sudo losetup --show -fP chr.img)
           echo "Using loop device: $LOOP_DEV"
+      
+          echo "Checking available partitions on loop device:"
+          lsblk $LOOP_DEV
+      
+          echo "Mounting ${LOOP_DEV}p1 to /mnt/chr..."
           sudo mount ${LOOP_DEV}p1 /mnt/chr
       
-          # Inject config
+          echo "Mounted image content:"
+          sudo ls -lah /mnt/chr
+      
+          echo "Injecting autorun.rsc into mounted image..."
           sudo cp scripts/startup.rsc /mnt/chr/autorun.rsc
       
+          echo "Confirming injection:"
+          sudo ls -lah /mnt/chr/autorun.rsc
+          echo "File contents:"
+          sudo cat /mnt/chr/autorun.rsc
+      
+          echo "Unmounting and detaching loop device..."
           sudo umount /mnt/chr
           sudo losetup -d $LOOP_DEV
+      
+          echo "Done injecting configuration."
 
       - name: Compress modified image
         if: steps.check.outputs.skip == 'false'
