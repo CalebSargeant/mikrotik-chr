@@ -10,6 +10,10 @@ echo "Generated password: $PASSWORD"
 echo "password=$PASSWORD" >> $GITHUB_OUTPUT
 
 # Replace the placeholder in startup.rsc
-sed -i "s/PLACEHOLDER_PASSWORD/$PASSWORD/g" scripts/startup.rsc
-
-echo "Password injected into startup.rsc"
+if grep -q "PLACEHOLDER_PASSWORD" scripts/startup.rsc; then
+    sed -i "s/PLACEHOLDER_PASSWORD/$PASSWORD/g" scripts/startup.rsc
+    echo "Password injected into startup.rsc"
+else
+    echo "Warning: PLACEHOLDER_PASSWORD not found in startup.rsc"
+    echo "This might indicate the placeholder was already replaced or is missing"
+fi
