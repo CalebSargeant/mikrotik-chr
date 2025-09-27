@@ -7,7 +7,9 @@ set -e
 PASSWORD=$(openssl rand -base64 18 | tr -d "=+/" | cut -c1-24)
 
 echo "Generated password: $PASSWORD"
-echo "password=$PASSWORD" >> $GITHUB_OUTPUT
+if [ -n "$GITHUB_OUTPUT" ]; then
+    echo "password=$PASSWORD" >> "$GITHUB_OUTPUT"
+fi
 
 # Replace the placeholder in startup.rsc
 if grep -q "PLACEHOLDER_PASSWORD" scripts/startup.rsc; then
