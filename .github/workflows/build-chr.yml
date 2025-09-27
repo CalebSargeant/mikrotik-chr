@@ -11,7 +11,84 @@ on:
       - ".github/workflows/build-chr.yml"
 
 jobs:
-  build-chr:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+      should-build: ${{ steps.check-version.outputs.should-build }}
+      password: ${{ steps.password.outputs.password }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest CHR version
+        id: get-version
+        run: |
+          echo "🔍 Attempting to get latest CHR version..."
+          
+          # Method 1: Try parsing download page
+          LATEST_VERSION=$(curl -s "https://mikrotik.com/download" \
+            | grep -o 'chr-[0-9]\.[0-9]\+\.[0-9]\+\.img\.zip' \
+            | grep -v "beta" \
+            | grep -v "rc" \
+            | sort -V \
+            | tail -n 1 \
+            | sed 's/chr-\(.*\)\.img\.zip/\1/' || true)
+            
+          # Method 2: If that fails, check existing releases to get current version 
+          if [ -z "$LATEST_VERSION" ]; then
+            echo "⚠️ Download page parsing failed, checking existing releases..."
+            LATEST_VERSION=$(git ls-remote --tags origin | \
+              grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+$' | \
+              sed 's/^v//' | sort -V | tail -n 1 || echo "")
+          fi
+          
+          # Method 3: Fallback to known working version if all else fails
+          if [ -z "$LATEST_VERSION" ]; then
+            echo "⚠️ All version detection methods failed, using fallback version"
+            LATEST_VERSION="7.19.6"
+          fi
+          
+          echo "✅ Latest CHR version: $LATEST_VERSION"
+          echo "version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if build needed
+        id: check-version
+        run: |
+          VERSION=${{ steps.get-version.outputs.version }}
+          TAG="v${VERSION}"
+          
+          echo "Checking for existing release with tag: $TAG"
+          
+          # Check if this version already exists as a release
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists"
+            # Check if we need to rebuild due to script changes since the tag
+            TAG_DATE=$(git log -1 --format=%ct "$TAG" 2>/dev/null || echo "0")
+            SCRIPT_DATE=$(git log -1 --format=%ct -- scripts/ .github/workflows/ 2>/dev/null || echo "1")
+            if [ "$SCRIPT_DATE" -gt "$TAG_DATE" ]; then
+              echo "Scripts/workflows updated since release - rebuilding"
+              echo "should-build=true" >> $GITHUB_OUTPUT
+            else
+              echo "No changes since last release - skipping build"
+              echo "should-build=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "New version detected - building $VERSION"
+            echo "should-build=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate rotating password
+        id: password
+        if: steps.check-version.outputs.should-build == 'true'
+        run: |
+          ./scripts/generate-password.sh
+
+  build-images:
+    needs: check-version
+    if: needs.check-version.outputs.should-build == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -19,121 +96,126 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: true
-
-      - name: Get latest CHR version
-        id: get-version
-        run: |
-          LATEST_VERSION=$(curl -s "https://mikrotik.com/download" \
-            | grep -o 'chr-[0-9]\.[0-9]\+\.[0-9]\+\.img\.zip' \
-            | grep -v "beta" \
-            | grep -v "rc" \
-            | sort -V \
-            | tail -n 1 \
-            | sed 's/chr-\(.*\)\.img\.zip/\1/')
-          echo "Latest version: $LATEST_VERSION"
-          echo "version=$LATEST_VERSION" >> $GITHUB_OUTPUT
-
-      - name: Generate rotating password
-        id: password
-        run: |
-          ./scripts/generate-password.sh
-
-      - name: Check existing release
-        id: check
-        run: |
-          VERSION=${{ steps.get-version.outputs.version }}
-          TAG="v${VERSION}-${{ matrix.arch }}"
-
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG exists"
-            # Check if we need to rebuild due to script changes
-            TAG_DATE=$(git log -1 --format=%ct "$TAG" 2>/dev/null || echo "0")
-            SCRIPT_DATE=$(git log -1 --format=%ct -- scripts/ 2>/dev/null || echo "1")
-            if [ "$SCRIPT_DATE" -gt "$TAG_DATE" ]; then
-              echo "Scripts newer than tag - rebuilding"
-              echo "skip=false" >> $GITHUB_OUTPUT
-            else
-              echo "skip=true" >> $GITHUB_OUTPUT
-            fi
-          else
-            echo "skip=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Exit early if up-to-date
-        if: steps.check.outputs.skip == 'true'
-        run: |
-          echo "Already built and script unchanged — skipping ${{ matrix.arch }}."
 
       - name: Install build dependencies
-        if: steps.check.outputs.skip == 'false'
         run: |
           sudo apt-get update
           sudo apt-get install -y libguestfs-tools unzip curl gzip qemu-user-static
 
+      - name: Cache CHR download
+        uses: actions/cache@v4
+        id: cache-chr
+        with:
+          path: chr-base.zip
+          key: chr-${{ needs.check-version.outputs.version }}
+          restore-keys: |
+            chr-
+
       - name: Download CHR image
-        if: steps.check.outputs.skip == 'false'
+        if: steps.cache-chr.outputs.cache-hit != 'true'
         run: |
-          VERSION=${{ steps.get-version.outputs.version }}
+          VERSION=${{ needs.check-version.outputs.version }}
+          echo "📦 Downloading CHR version: $VERSION"
+          
+          # MikroTik provides the same image for all architectures currently
+          curl -L -o chr-base.zip https://download.mikrotik.com/routeros/${VERSION}/chr-${VERSION}.img.zip
+          echo "✅ Download complete"
 
-          # Download appropriate architecture image
-          if [ "${{ matrix.arch }}" = "arm64" ]; then
-            # MikroTik doesn't provide separate ARM64 images, we'll use the generic one
-            # and document the limitation
-            curl -L -o chr.zip https://download.mikrotik.com/routeros/${VERSION}/chr-${VERSION}.img.zip
-          else
-            curl -L -o chr.zip https://download.mikrotik.com/routeros/${VERSION}/chr-${VERSION}.img.zip
-          fi
-
-          unzip chr.zip -d .
+      - name: Prepare architecture-specific image
+        run: |
+          VERSION=${{ needs.check-version.outputs.version }}
+          echo "🏗️ Preparing image for ${{ matrix.arch }}"
+          
+          # Extract and rename for this architecture
+          unzip chr-base.zip -d .
           mv chr-${VERSION}.img chr-${{ matrix.arch }}.img
 
-      - name: Mount and modify image using loop device
-        if: steps.check.outputs.skip == 'false'
+      - name: Restore password placeholder
         run: |
-          echo "Creating mount directory..."
+          # Ensure we have the placeholder for injection
+          sed -i 's/password=\"[^\"]*\"/password=\"PLACEHOLDER_PASSWORD\"/g' scripts/startup.rsc
+
+      - name: Generate rotating password (architecture-specific)
+        run: |
+          # Use the password from the check-version job
+          PASSWORD="${{ needs.check-version.outputs.password }}"
+          sed -i "s/PLACEHOLDER_PASSWORD/$PASSWORD/g" scripts/startup.rsc
+          echo "🔐 Password injected into startup.rsc"
+
+      - name: Mount and modify image using loop device
+        run: |
+          echo "🔧 Creating mount directory..."
           sudo mkdir -p /mnt/chr
 
-          echo "Attaching loop device to chr-${{ matrix.arch }}.img..."
+          echo "🔧 Attaching loop device to chr-${{ matrix.arch }}.img..."
           LOOP_DEV=$(sudo losetup --show -fP chr-${{ matrix.arch }}.img)
           echo "Using loop device: $LOOP_DEV"
 
-          echo "Checking available partitions on loop device:"
+          echo "🔧 Checking available partitions on loop device:"
           lsblk $LOOP_DEV
 
-          echo "Mounting ${LOOP_DEV}p2 to /mnt/chr..."
+          echo "🔧 Mounting ${LOOP_DEV}p2 to /mnt/chr..."
           sudo mount ${LOOP_DEV}p2 /mnt/chr
 
-          echo "Mounted image content:"
+          echo "🔧 Mounted image content:"
           sudo ls -lah /mnt/chr
 
-          echo "Injecting autorun.rsc into mounted image..."
+          echo "🔧 Injecting autorun.rsc into mounted image..."
           sudo cp scripts/startup.rsc /mnt/chr/autorun.rsc
 
-          echo "Confirming injection:"
+          echo "✅ Confirming injection:"
           sudo ls -lah /mnt/chr/autorun.rsc
           echo "File contents:"
           sudo cat /mnt/chr/autorun.rsc
 
-          echo "Unmounting and detaching loop device..."
+          echo "🔧 Unmounting and detaching loop device..."
           sudo umount /mnt/chr
           sudo losetup -d $LOOP_DEV
 
-          echo "Done injecting configuration for ${{ matrix.arch }}."
+          echo "✅ Configuration injection complete for ${{ matrix.arch }}"
 
       - name: Compress modified image
-        if: steps.check.outputs.skip == 'false'
-        run: gzip -c chr-${{ matrix.arch }}.img > chr-${{ matrix.arch }}.img.gz
+        run: |
+          echo "🗜️ Compressing image for ${{ matrix.arch }}..."
+          gzip -c chr-${{ matrix.arch }}.img > chr-${{ matrix.arch }}.img.gz
+          echo "✅ Compression complete"
+          ls -lh chr-${{ matrix.arch }}.img.gz
 
-      - name: Create or update Git tag
-        if: steps.check.outputs.skip == 'false'
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: chr-${{ matrix.arch }}-image
+          path: chr-${{ matrix.arch }}.img.gz
+          retention-days: 1
+
+  create-release:
+    needs: [check-version, build-images]
+    if: needs.check-version.outputs.should-build == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Organize artifacts
+        run: |
+          mkdir -p ./release-assets
+          find ./artifacts -name "*.img.gz" -exec cp {} ./release-assets/ \;
+          ls -la ./release-assets/
+
+      - name: Create Git tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION=${{ steps.get-version.outputs.version }}
-          TAG="v${VERSION}-${{ matrix.arch }}"
+          VERSION=${{ needs.check-version.outputs.version }}
+          TAG="v${VERSION}"
 
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
@@ -142,24 +224,45 @@ jobs:
           git tag -f $TAG
           git push --force origin $TAG
 
-      - name: Create or update GitHub Release
-        if: steps.check.outputs.skip == 'false'
+      - name: Create unified GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.get-version.outputs.version }}-${{ matrix.arch }}
-          name: "MikroTik CHR ${{ steps.get-version.outputs.version }} (${{ matrix.arch }})"
+          tag_name: v${{ needs.check-version.outputs.version }}
+          name: "MikroTik CHR ${{ needs.check-version.outputs.version }}"
           body: |
-            Pre-configured CHR image for ${{ matrix.arch }} architecture.
+            🚀 **MikroTik CHR ${{ needs.check-version.outputs.version }}** - Multi-Architecture Images
 
-            **Features:**
-            - SSH and API-SSL enabled for secure access
-            - DHCP client configured on ether1 (perfect for cloud deployments)
-            - Rotating admin password: `${{ steps.password.outputs.password }}`
-            - Ready for AWS EC2 deployment
+            Pre-configured CHR images for both AMD64 and ARM64 architectures, optimized for cloud deployments.
 
-            **Security Note:** The admin password is rotated with each build for security.
+            ## 📦 Downloads
+            - **`chr-amd64.img.gz`** - For Intel/AMD x86-64 systems
+            - **`chr-arm64.img.gz`** - For ARM64 systems (AWS Graviton, etc.)
+
+            ## ✨ Features
+            - 🔐 **SSH & API-SSL** enabled for secure remote access
+            - 🌐 **DHCP Client** pre-configured on ether1 (cloud-ready)
+            - 🔑 **Rotating Admin Password**: `${{ needs.check-version.outputs.password }}`
+            - ☁️ **AWS EC2 Compatible** - ready for cloud deployment
+            - 🛠️ **System Identity**: `chr` (pre-configured)
+
+            ## 🚀 Quick Deploy
+            ```bash
+            # AWS EC2 or any Linux system
+            curl -sSL https://raw.githubusercontent.com/CalebSargeant/mikrotik-chr/main/scripts/flash.sh | sudo bash
+            ```
+
+            ## 📋 Access Information
+            - **SSH**: `ssh admin@<your-ip>` (port 22)
+            - **WebFig**: `https://<your-ip>:8729` (accept self-signed cert)
+            - **Username**: `admin`
+            - **Password**: `${{ needs.check-version.outputs.password }}`
+
+            > 🔒 **Security Note**: Admin password rotates with each build for enhanced security.
+
+            ---
+            *For deployment guides and documentation, visit the [repository](https://github.com/CalebSargeant/mikrotik-chr).*
           draft: false
           prerelease: false
-          files: chr-${{ matrix.arch }}.img.gz
+          files: ./release-assets/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

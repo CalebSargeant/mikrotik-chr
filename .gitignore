@@ -2,9 +2,12 @@
 *.img
 *.img.gz
 *.zip
+chr-base.zip
 chr_extract/
 modified-RouterOS.img
 /tmp/
+artifacts/
+release-assets/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
