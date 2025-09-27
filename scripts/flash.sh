@@ -24,8 +24,12 @@ esac
 echo "Detected architecture: $ARCH -> CHR architecture: $CHR_ARCH"
 
 # Get latest release URL
-LATEST_RELEASE_URL="https://api.github.com/repos/CalebSargeant/mikrotik-chr/releases/latest"
-DOWNLOAD_URL=$(curl -s "$LATEST_RELEASE_URL" | grep "browser_download_url.*chr-${CHR_ARCH}.img.gz" | cut -d '"' -f 4)
+# Find the first release that contains the correct architecture asset
+DOWNLOAD_URL=$(curl -s "https://api.github.com/repos/CalebSargeant/mikrotik-chr/releases" | jq -r --arg arch "$CHR_ARCH" '
+  .[] 
+  | .assets[]? 
+  | select(.name | test("chr-" + $arch + "\\.img\\.gz$")) 
+  | .browser_download_url' | head -n 1)
 
 if [ -z "$DOWNLOAD_URL" ]; then
     echo "Could not find download URL for architecture: $CHR_ARCH"
