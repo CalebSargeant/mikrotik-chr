@@ -1,3 +1,11 @@
+# Build artifacts and temporary files
+*.img
+*.img.gz
+*.zip
+chr_extract/
+modified-RouterOS.img
+/tmp/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
