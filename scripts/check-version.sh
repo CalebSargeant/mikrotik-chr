@@ -1,7 +1,7 @@
 #!/bin/bash
 # check-version.sh - Manually check for new Mikrotik CHR versions
 
-set -e
+set -euo pipefail
 
 echo "🔍 MikroTik CHR Version Checker"
 echo "==============================="
