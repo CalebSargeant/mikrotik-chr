@@ -1,3 +1,13 @@
+
+[![CodeQL](https://github.com/CalebSargeant/mikrotik-chr/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/CalebSargeant/mikrotik-chr/actions/workflows/github-code-scanning/codeql)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=coverage)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+[![Known Vulnerabilities](https://snyk.io/test/github/CalebSargeant/mikrotik-chr/badge.svg)](https://snyk.io/test/github/CalebSargeant/mikrotik-chr)
+
 # MikroTik CHR Multi-Architecture Images
 
 This repository automatically builds pre-configured MikroTik Cloud Hosted Router (CHR) images for both **AMD64** and **ARM64** architectures, optimized for cloud deployments.
