@@ -210,7 +210,15 @@ jobs:
       - name: Organize artifacts
         run: |
           mkdir -p ./release-assets
-          find ./artifacts -name "*.img.gz" -exec cp {} ./release-assets/ \;
+          # Copy and rename artifacts explicitly to avoid overwriting due to naming conflicts
+          AMD64_IMG=$(find ./artifacts -type f -name "chr-amd64.img.gz" | head -n 1)
+          ARM64_IMG=$(find ./artifacts -type f -name "chr-arm64.img.gz" | head -n 1)
+          if [ -z "$AMD64_IMG" ] || [ -z "$ARM64_IMG" ]; then
+            echo "Error: One or both architecture images not found in artifacts."
+            exit 1
+          fi
+          cp "$AMD64_IMG" ./release-assets/chr-amd64.img.gz
+          cp "$ARM64_IMG" ./release-assets/chr-arm64.img.gz
           ls -la ./release-assets/
 
       - name: Create Git tag
