@@ -11,5 +11,8 @@ on:
 jobs:
   sonarqube:
     uses: CalebSargeant/reusable-workflows/.github/workflows/sonarqube.yaml@main
+    with:
+      sonar_project_key: "CalebSargeant_mikrotik-chr"
+      sonar_organization: "calebsargeant"
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
