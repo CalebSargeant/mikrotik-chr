@@ -18,15 +18,18 @@ This repository automatically builds pre-configured MikroTik Cloud Hosted Router
 - 🔄 **Rotating Passwords**: Admin password rotates with each build for enhanced security
 - 🌐 **Cloud-Ready Configuration**: DHCP client enabled, SSH and API-SSL accessible
 - ☁️ **AWS EC2 Compatible**: Ready-to-deploy EC2 images
-- 🚀 **Automated Builds**: Daily builds with latest CHR versions
+- 🚀 **Smart Automated Builds**: Only builds when new CHR versions are detected
+- 📦 **Unified Releases**: Single release with both architectures as downloadable assets
 
 ## Quick Start
 
 ### Download Pre-built Images
 
-Visit our [Releases](https://github.com/CalebSargeant/mikrotik-chr/releases) page to download:
+Visit our [Releases](https://github.com/CalebSargeant/mikrotik-chr/releases) page to download the latest unified release containing:
 - `chr-amd64.img.gz` - For Intel/AMD x86-64 systems
 - `chr-arm64.img.gz` - For ARM64 systems (including AWS Graviton)
+
+Each release includes **both architectures** as downloadable assets, with a single rotating admin password shared between both images.
 
 ### Default Configuration
 
@@ -154,10 +157,22 @@ cd mikrotik-chr
 sudo ./scripts/inject.sh
 ```
 
-### Workflow Triggers
-- **Daily**: Automatic builds at 03:00 UTC
+### Workflow Triggers & Smart Building
+- **Daily**: Automatic version check at 03:00 UTC - only builds when new MikroTik versions are detected
 - **Manual**: Workflow dispatch from GitHub Actions
-- **Push**: Changes to `scripts/` or workflow files
+- **Push**: Changes to `scripts/` or workflow files force rebuild
+
+### Version Checking
+```bash
+# Check for new versions manually
+./scripts/check-version.sh
+```
+
+The workflow intelligently:
+- ✅ Only runs builds when a new MikroTik CHR version is available
+- ✅ Creates unified releases with both AMD64 and ARM64 images as assets
+- ✅ Caches downloads and uses marketplace actions for reliability
+- ✅ Skips builds if no version changes detected
 
 ## License
 

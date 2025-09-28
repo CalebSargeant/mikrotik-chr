@@ -11,6 +11,7 @@ echo "📁 Checking required files..."
 required_files=(
     "scripts/startup.rsc"
     "scripts/generate-password.sh"
+    "scripts/check-version.sh"
     "scripts/flash.sh"
     ".github/workflows/build-chr.yml"
     "docs/aws-deployment.md"
@@ -113,6 +114,16 @@ else
     exit 1
 fi
 
+# Test GitHub Actions workflow syntax
+echo ""
+echo "🔧 Validating GitHub Actions workflow..."
+if python3 -c "import yaml; yaml.safe_load(open('.github/workflows/build-chr.yml').read())" >/dev/null 2>&1; then
+    echo "✅ GitHub Actions workflow syntax is valid"
+else
+    echo "❌ GitHub Actions workflow has syntax errors"
+    exit 1
+fi
+
 echo ""
 echo "🎉 All validation checks passed!"
 echo "======================================================="
@@ -120,8 +131,10 @@ echo "✅ Multi-architecture build setup is ready"
 echo "✅ Password rotation is configured"
 echo "✅ Interfaces are enabled for cloud deployment"
 echo "✅ AWS documentation is in place"
+echo "✅ Streamlined workflow with unified releases configured"
 echo ""
 echo "Next steps:"
-echo "1. Push changes to trigger workflow"
-echo "2. Monitor GitHub Actions for first build"
-echo "3. Test deployment with generated images"
+echo "1. Push changes to trigger workflow (only runs on new CHR versions)"
+echo "2. Monitor GitHub Actions for smart build triggers"
+echo "3. Check for new versions with: ./scripts/check-version.sh"
+echo "4. Test deployment with generated unified releases"
