@@ -133,6 +133,9 @@ jobs:
       - name: Restore password placeholder
         run: |
           # Ensure we have the placeholder for injection
+          # Replace any password attribute value (password="...") with a placeholder.
+          # The regex matches password="ANYTHING" and replaces it with password="PLACEHOLDER_PASSWORD".
+          # This is necessary to allow safe password injection in a later step.
           sed -i 's/password=\"[^\"]*\"/password=\"PLACEHOLDER_PASSWORD\"/g' scripts/startup.rsc
 
       - name: Generate rotating password (architecture-specific)
