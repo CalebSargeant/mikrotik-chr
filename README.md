@@ -1,3 +1,4 @@
+[![Build Multi-Architecture CHR Images](https://github.com/CalebSargeant/mikrotik-chr/actions/workflows/build-chr.yml/badge.svg)](https://github.com/CalebSargeant/mikrotik-chr/actions/workflows/build-chr.yml)
 <!-- Quality & Security Overview -->
 [![CodeQL](https://github.com/CalebSargeant/mikrotik-chr/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/CalebSargeant/mikrotik-chr/actions/workflows/github-code-scanning/codeql)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
