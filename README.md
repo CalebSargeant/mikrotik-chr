@@ -1,12 +1,23 @@
-
+<!-- Quality & Security Overview -->
 [![CodeQL](https://github.com/CalebSargeant/mikrotik-chr/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/CalebSargeant/mikrotik-chr/actions/workflows/github-code-scanning/codeql)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=coverage)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
-[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
-[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
-[![Known Vulnerabilities](https://snyk.io/test/github/CalebSargeant/mikrotik-chr/badge.svg)](https://snyk.io/test/github/CalebSargeant/mikrotik-chr)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=security_rating&token=ebfb6b12c8469925ada2be9a1af34b9679e55d40)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+[![Known Vulnerabilities](https://snyk.io/test/github/calebsargeant/reusable-workflows/badge.svg)](https://snyk.io/test/github/calebsargeant/reusable-workflows)
+
+<!-- Code Quality & Maintainability -->
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=sqale_rating&token=ebfb6b12c8469925ada2be9a1af34b9679e55d40)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=reliability_rating&token=ebfb6b12c8469925ada2be9a1af34b9679e55d40)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=sqale_index&token=ebfb6b12c8469925ada2be9a1af34b9679e55d40)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+
+<!-- Code Metrics -->
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=coverage&token=ebfb6b12c8469925ada2be9a1af34b9679e55d40)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=bugs&token=ebfb6b12c8469925ada2be9a1af34b9679e55d40)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=vulnerabilities&token=ebfb6b12c8469925ada2be9a1af34b9679e55d40)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=code_smells&token=ebfb6b12c8469925ada2be9a1af34b9679e55d40)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+
+<!-- Project Stats -->
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=ncloc&token=ebfb6b12c8469925ada2be9a1af34b9679e55d40)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=duplicated_lines_density&token=ebfb6b12c8469925ada2be9a1af34b9679e55d40)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
 
 # MikroTik CHR Multi-Architecture Images
 
