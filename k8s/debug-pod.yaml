@@ -1,10 +1,13 @@
 ---
 # debug-pod.yaml
 # Temporary pod for debugging and accessing the PersistentVolume
+# Note: Update the namespace to match your deployment (default is 'default')
 apiVersion: v1
 kind: Pod
 metadata:
   name: routeros-debug
+  # Update this namespace to match your deployment
+  # For example: namespace: routeros-checker
   namespace: default
 spec:
   containers:

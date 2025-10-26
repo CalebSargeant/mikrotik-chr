@@ -164,9 +164,12 @@ kubectl exec routeros-debug -n routeros-checker -- rm -f /data/current_version.t
 # Clean up the debug pod
 kubectl delete pod routeros-debug -n routeros-checker
 
-# Method 2: One-liner using a temporary pod
-kubectl run routeros-debug --image=busybox -n routeros-checker --rm -i --restart=Never \
-  --overrides-file=k8s/debug-pod.yaml -- rm -f /data/current_version.txt
+# Method 2: Inline pod creation (no separate YAML file needed)
+kubectl run routeros-debug -n routeros-checker --image=busybox --restart=Never \
+  --overrides='{"spec":{"containers":[{"name":"debug","image":"busybox","command":["sleep","3600"],"volumeMounts":[{"name":"data","mountPath":"/data"}]}],"volumes":[{"name":"data","persistentVolumeClaim":{"claimName":"routeros-version-data"}}]}}' \
+  && kubectl wait --for=condition=ready pod/routeros-debug -n routeros-checker --timeout=30s \
+  && kubectl exec routeros-debug -n routeros-checker -- rm -f /data/current_version.txt \
+  && kubectl delete pod routeros-debug -n routeros-checker
 
 # Trigger a job to re-check
 kubectl create job --from=cronjob/routeros-version-checker force-check -n routeros-checker
