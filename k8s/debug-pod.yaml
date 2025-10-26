@@ -1,14 +1,20 @@
 ---
 # debug-pod.yaml
 # Temporary pod for debugging and accessing the PersistentVolume
-# Note: Update the namespace to match your deployment (default is 'default')
+#
+# Usage:
+#   kubectl apply -f k8s/debug-pod.yaml -n <your-namespace>
+#   kubectl exec routeros-debug -n <your-namespace> -- ls -la /data
+#   kubectl delete -f k8s/debug-pod.yaml -n <your-namespace>
+#
+# Note: This file uses 'default' namespace as a placeholder.
+# Override with -n flag when applying, or edit the namespace field below.
+
 apiVersion: v1
 kind: Pod
 metadata:
   name: routeros-debug
-  # Update this namespace to match your deployment
-  # For example: namespace: routeros-checker
-  namespace: default
+  namespace: default  # Change this to match your deployment namespace
 spec:
   containers:
   - name: debug
