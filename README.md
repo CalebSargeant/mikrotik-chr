@@ -186,6 +186,42 @@ The workflow intelligently:
 - ✅ Caches downloads and uses marketplace actions for reliability
 - ✅ Skips builds if no version changes detected
 
+## Kubernetes Automated Version Checking
+
+For production environments, you can deploy an automated version checker as a Kubernetes CronJob that monitors MikroTik for new RouterOS releases and automatically triggers builds.
+
+### Features
+
+- 🔄 **Automated Checks**: Runs periodically to check for new versions
+- 🔐 **GitHub App Authentication**: Secure authentication using GitHub Apps
+- 🚀 **Automatic Workflow Triggers**: Triggers builds when new versions are detected
+- 💾 **Version Persistence**: Remembers the last checked version
+- 📊 **Comprehensive Logging**: Full logging for monitoring and debugging
+
+### Quick Start
+
+```bash
+# 1. Set up GitHub App credentials
+cd k8s
+cp secret.yaml.template secret.yaml
+# Edit secret.yaml with your GitHub App credentials
+
+# 2. Deploy to Kubernetes
+./deploy.sh
+
+# 3. Monitor the CronJob
+kubectl get cronjobs
+kubectl logs -l app=routeros-version-checker
+```
+
+### Documentation
+
+- **[Kubernetes Setup Guide](k8s/README.md)** - Complete deployment instructions
+- **[Configuration Examples](k8s/EXAMPLES.md)** - Example configurations and use cases
+- **[Python Script](scripts/check_routeros_version.py)** - The version checker implementation
+
+For detailed setup instructions, see the [k8s/README.md](k8s/README.md) file.
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.

@@ -1,0 +1,82 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: routeros-version-checker
+  namespace: default
+spec:
+  # Run every 6 hours
+  # Adjust the schedule as needed (cron format: minute hour day month weekday)
+  schedule: "0 */6 * * *"
+  
+  # Keep last 3 successful and 1 failed job for debugging
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: routeros-version-checker
+        spec:
+          restartPolicy: OnFailure
+          
+          containers:
+          - name: version-checker
+            # Use official Python image
+            image: python:3.11-slim
+            
+            command:
+            - /bin/sh
+            - -c
+            - |
+              # Install dependencies
+              pip install --no-cache-dir -r /app/requirements.txt
+              
+              # Run the version checker
+              python /app/check_routeros_version.py
+            
+            # Environment variables from ConfigMap
+            envFrom:
+            - configMapRef:
+                name: routeros-version-checker-config
+            
+            # Environment variables from Secret
+            env:
+            - name: GITHUB_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: routeros-version-checker-secret
+                  key: GITHUB_APP_ID
+            - name: GITHUB_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: routeros-version-checker-secret
+                  key: GITHUB_PRIVATE_KEY
+            
+            # Volume mounts
+            volumeMounts:
+            - name: app-scripts
+              mountPath: /app
+              readOnly: true
+            - name: data
+              mountPath: /data
+            
+            # Resource limits
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "100m"
+              limits:
+                memory: "256Mi"
+                cpu: "200m"
+          
+          # Volumes
+          volumes:
+          - name: app-scripts
+            configMap:
+              name: routeros-version-checker-scripts
+          - name: data
+            persistentVolumeClaim:
+              claimName: routeros-version-data

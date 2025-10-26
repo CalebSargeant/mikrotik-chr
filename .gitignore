@@ -185,3 +185,7 @@ cython_debug/
 .pypirc
 
 .idea/
+
+# Kubernetes secrets (never commit real secrets!)
+k8s/secret.yaml
+k8s/scripts-configmap.yaml
