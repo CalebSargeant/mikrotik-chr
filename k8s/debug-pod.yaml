@@ -1,0 +1,21 @@
+---
+# debug-pod.yaml
+# Temporary pod for debugging and accessing the PersistentVolume
+apiVersion: v1
+kind: Pod
+metadata:
+  name: routeros-debug
+  namespace: default
+spec:
+  containers:
+  - name: debug
+    image: busybox
+    command: ["sleep", "3600"]
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: routeros-version-data
+  restartPolicy: Never
