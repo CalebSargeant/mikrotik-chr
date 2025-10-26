@@ -11,10 +11,20 @@ The simplest deployment for testing:
 kubectl create namespace routeros-checker
 
 # 2. Create secret with your GitHub App credentials
+# Method 1: From files (recommended - doesn't expose secrets in shell history)
+echo -n "your-app-id" > /tmp/app-id.txt
+cat private-key.pem > /tmp/private-key.pem
 kubectl create secret generic routeros-version-checker-secret \
-  --from-literal=GITHUB_APP_ID="your-app-id" \
-  --from-literal=GITHUB_PRIVATE_KEY="$(cat private-key.pem)" \
+  --from-file=GITHUB_APP_ID=/tmp/app-id.txt \
+  --from-file=GITHUB_PRIVATE_KEY=/tmp/private-key.pem \
   -n routeros-checker
+rm /tmp/app-id.txt /tmp/private-key.pem
+
+# Method 2: From literals (simpler but exposes in shell history)
+# kubectl create secret generic routeros-version-checker-secret \
+#   --from-literal=GITHUB_APP_ID="your-app-id" \
+#   --from-literal=GITHUB_PRIVATE_KEY="$(cat private-key.pem)" \
+#   -n routeros-checker
 
 # 3. Deploy all resources
 cd k8s
@@ -140,13 +150,36 @@ kubectl logs <pod-name> -n routeros-checker
 ### Force a new version check
 
 ```bash
-# Delete the version file to force detection of "new" version
-kubectl run -it --rm debug --image=busybox -n routeros-checker -- sh -c "
-  mount | grep /data
-  rm -f /data/current_version.txt
-"
+# Method 1: Delete the version file using a debug pod with proper volume mounts
+kubectl run -it --rm debug --image=busybox -n routeros-checker \
+  --overrides='
+{
+  "spec": {
+    "containers": [{
+      "name": "debug",
+      "image": "busybox",
+      "stdin": true,
+      "tty": true,
+      "command": ["sh", "-c", "rm -f /data/current_version.txt && echo Version file deleted"],
+      "volumeMounts": [{
+        "name": "data",
+        "mountPath": "/data"
+      }]
+    }],
+    "volumes": [{
+      "name": "data",
+      "persistentVolumeClaim": {
+        "claimName": "routeros-version-data"
+      }
+    }]
+  }
+}'
 
-# Trigger a job
+# Method 2: Using kubectl exec if a job pod is still running
+# POD_NAME=$(kubectl get pods -n routeros-checker -l app=routeros-version-checker -o jsonpath='{.items[0].metadata.name}')
+# kubectl exec -it $POD_NAME -n routeros-checker -- rm -f /data/current_version.txt
+
+# Trigger a job to re-check
 kubectl create job --from=cronjob/routeros-version-checker force-check -n routeros-checker
 ```
 
