@@ -170,9 +170,8 @@ sudo ./scripts/inject.sh
 ```
 
 ### Workflow Triggers & Smart Building
-- **Daily**: Automatic version check at 03:00 UTC - only builds when new MikroTik versions are detected
-- **Manual**: Workflow dispatch from GitHub Actions
-- **Push**: Changes to `scripts/` or workflow files force rebuild
+- **Manual**: Workflow dispatch from GitHub Actions - trigger when you know a new MikroTik version is available
+- **Push**: Changes to `scripts/` or workflow files force rebuild automatically
 
 ### Version Checking
 ```bash
