@@ -48,7 +48,7 @@ EXPOSE 8080
 # trigger a failover. The probe hits /health on the same listener, so a hung
 # server is also caught (not just a dead process).
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD curl -fsS http://localhost:8080/health || exit 1
+  CMD curl -fsS http://localhost:${LISTEN_PORT:-8080}/health || exit 1
 
 # Run as non-root. oci-cli + the listener don't need root; binding to 8080
 # (>1024) is fine for an unprivileged user.
