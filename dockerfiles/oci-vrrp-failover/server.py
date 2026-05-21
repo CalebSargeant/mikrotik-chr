@@ -43,7 +43,8 @@ Environment:
 Endpoints:
     POST /promote   reassign the configured route(s) to the local
                     primary private IP. Returns JSON
-                    {ok, updated, errors}.
+                    {ok, results} where results is a list of
+                    {route_table, ok, message}.
     GET  /health    liveness probe — 200 if the helper is up and
                     configured.
 
