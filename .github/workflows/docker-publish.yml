@@ -20,6 +20,9 @@ on:
       - "dockerfiles/**"
       - ".github/workflows/docker-publish.yml"
 
+permissions:
+  contents: read
+
 jobs:
   test:
     # Python unit tests for any image whose directory has a test_*.py file.
