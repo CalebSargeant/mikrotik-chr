@@ -13,6 +13,7 @@ on:
     paths:
       - "dockerfiles/**"
       - ".github/workflows/docker-publish.yml"
+  push:
     tags:
       - "oci-vrrp-failover-v*"
   pull_request:
