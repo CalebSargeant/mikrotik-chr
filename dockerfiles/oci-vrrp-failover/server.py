@@ -168,10 +168,12 @@ class FailoverHelper:
             return True, "no-op (already current)"
 
         target["network-entity-id"] = self.local_private_ip_ocid
-        target["description"] = (
-            f"Internet egress via local primary IP (VRRP master) — "
-            f"managed by oci-vrrp-failover, was {old_next_hop}"
-        )
+        # Preserve original description and append a marker.
+        original_desc = target.get("description", "")
+        if original_desc:
+            target["description"] = original_desc + " [failover-managed]"
+        else:
+            target["description"] = "[failover-managed]"
 
         # PUT the full modified list.
         upd = self._run_oci([
