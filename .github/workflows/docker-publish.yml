@@ -44,6 +44,7 @@ jobs:
 
   build:
     needs: test
+    if: always()
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -76,6 +77,10 @@ jobs:
           else
             echo "build=false" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Check test result
+        if: needs.test.result == 'skipped'
+        run: echo "Test was skipped, proceeding with build."
 
       - name: Set up QEMU
         if: steps.scope.outputs.build == 'true'
