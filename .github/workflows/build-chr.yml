@@ -17,7 +17,7 @@ jobs:
       password: ${{ steps.password.outputs.password }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
 
@@ -161,13 +161,17 @@ jobs:
           echo "🔧 Mounted image content:"
           sudo ls -lah /mnt/chr
 
-          echo "🔧 Injecting autorun.rsc into mounted image..."
-          sudo cp scripts/startup.rsc /mnt/chr/autorun.rsc
+          echo "Injecting autorun.scr into /rw on the mounted image..."
+          # RouterOS executes /rw/autorun.scr exactly once on first boot, then clears it.
+          # The image ships a stub at /rw/autorun.scr by default — we overwrite it.
+          # A file at the partition root or named .rsc is NOT executed (this was the bug).
+          sudo mkdir -p /mnt/chr/rw
+          sudo cp scripts/startup.rsc /mnt/chr/rw/autorun.scr
 
-          echo "✅ Confirming injection:"
-          sudo ls -lah /mnt/chr/autorun.rsc
+          echo "Confirming injection:"
+          sudo ls -lah /mnt/chr/rw/autorun.scr
           echo "File contents:"
-          sudo cat /mnt/chr/autorun.rsc
+          sudo cat /mnt/chr/rw/autorun.scr
 
           echo "🔧 Unmounting and detaching loop device..."
           sudo umount /mnt/chr
@@ -233,8 +237,9 @@ jobs:
           git tag -f $TAG
           git push --force origin $TAG
 
-      - name: Create unified GitHub Release
-        uses: softprops/action-gh-release@v2
+      - name: Create or update GitHub Release
+        if: steps.check.outputs.skip == 'false'
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           tag_name: v${{ needs.check-version.outputs.version }}
           name: "MikroTik CHR ${{ needs.check-version.outputs.version }}"
