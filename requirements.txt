@@ -1,0 +1,12 @@
+# Python dependencies for RouterOS Version Checker
+# Used in Kubernetes CronJob to check for new MikroTik releases
+
+# HTTP requests library
+requests>=2.31.0,<3.0.0
+
+# JWT generation for GitHub App authentication
+PyJWT>=2.8.0,<3.0.0
+
+# Cryptography library (required by PyJWT for RS256)
+# Updated to 42.0.8 to fix CVE-2024-26130, CVE-2023-50782, and CVE-2023-49083
+cryptography>=42.0.8,<43.0.0

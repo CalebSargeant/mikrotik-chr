@@ -1,12 +1,24 @@
-
+[![Build Multi-Architecture CHR Images](https://github.com/CalebSargeant/mikrotik-chr/actions/workflows/build-chr.yml/badge.svg)](https://github.com/CalebSargeant/mikrotik-chr/actions/workflows/build-chr.yml)
+<!-- Quality & Security Overview -->
 [![CodeQL](https://github.com/CalebSargeant/mikrotik-chr/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/CalebSargeant/mikrotik-chr/actions/workflows/github-code-scanning/codeql)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=coverage)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
-[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
-[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
-[![Known Vulnerabilities](https://snyk.io/test/github/CalebSargeant/mikrotik-chr/badge.svg)](https://snyk.io/test/github/CalebSargeant/mikrotik-chr)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=security_rating&token=ebfb6b12c8469925ada2be9a1af34b9679e55d40)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+[![Known Vulnerabilities](https://snyk.io/test/github/calebsargeant/reusable-workflows/badge.svg)](https://snyk.io/test/github/calebsargeant/reusable-workflows)
+
+<!-- Code Quality & Maintainability -->
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=sqale_rating&token=ebfb6b12c8469925ada2be9a1af34b9679e55d40)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=reliability_rating&token=ebfb6b12c8469925ada2be9a1af34b9679e55d40)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=sqale_index&token=ebfb6b12c8469925ada2be9a1af34b9679e55d40)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+
+<!-- Code Metrics -->
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=coverage&token=ebfb6b12c8469925ada2be9a1af34b9679e55d40)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=bugs&token=ebfb6b12c8469925ada2be9a1af34b9679e55d40)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=vulnerabilities&token=ebfb6b12c8469925ada2be9a1af34b9679e55d40)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=code_smells&token=ebfb6b12c8469925ada2be9a1af34b9679e55d40)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+
+<!-- Project Stats -->
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=ncloc&token=ebfb6b12c8469925ada2be9a1af34b9679e55d40)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=CalebSargeant_mikrotik-chr&metric=duplicated_lines_density&token=ebfb6b12c8469925ada2be9a1af34b9679e55d40)](https://sonarcloud.io/summary/new_code?id=CalebSargeant_mikrotik-chr)
 
 # MikroTik CHR Multi-Architecture Images
 
@@ -18,15 +30,18 @@ This repository automatically builds pre-configured MikroTik Cloud Hosted Router
 - 🔄 **Rotating Passwords**: Admin password rotates with each build for enhanced security
 - 🌐 **Cloud-Ready Configuration**: DHCP client enabled, SSH and API-SSL accessible
 - ☁️ **AWS EC2 Compatible**: Ready-to-deploy EC2 images
-- 🚀 **Automated Builds**: Daily builds with latest CHR versions
+- 🚀 **Smart Automated Builds**: Only builds when new CHR versions are detected
+- 📦 **Unified Releases**: Single release with both architectures as downloadable assets
 
 ## Quick Start
 
 ### Download Pre-built Images
 
-Visit our [Releases](https://github.com/CalebSargeant/mikrotik-chr/releases) page to download:
+Visit our [Releases](https://github.com/CalebSargeant/mikrotik-chr/releases) page to download the latest unified release containing:
 - `chr-amd64.img.gz` - For Intel/AMD x86-64 systems
 - `chr-arm64.img.gz` - For ARM64 systems (including AWS Graviton)
+
+Each release includes **both architectures** as downloadable assets, with a single rotating admin password shared between both images.
 
 ### Default Configuration
 
@@ -154,10 +169,57 @@ cd mikrotik-chr
 sudo ./scripts/inject.sh
 ```
 
-### Workflow Triggers
-- **Daily**: Automatic builds at 03:00 UTC
-- **Manual**: Workflow dispatch from GitHub Actions
-- **Push**: Changes to `scripts/` or workflow files
+### Workflow Triggers & Smart Building
+- **Manual**: Workflow dispatch from GitHub Actions - trigger when you know a new MikroTik version is available
+- **Push**: Changes to `scripts/` or workflow files force rebuild automatically
+
+### Version Checking
+```bash
+# Check for new versions manually
+./scripts/check-version.sh
+```
+
+The workflow intelligently:
+- ✅ Only runs builds when a new MikroTik CHR version is available
+- ✅ Creates unified releases with both AMD64 and ARM64 images as assets
+- ✅ Caches downloads and uses marketplace actions for reliability
+- ✅ Skips builds if no version changes detected
+
+## Kubernetes Automated Version Checking
+
+For production environments, you can deploy an automated version checker as a Kubernetes CronJob that monitors MikroTik for new RouterOS releases and automatically triggers builds.
+
+### Features
+
+- 🔄 **Automated Checks**: Runs periodically to check for new versions
+- 🔐 **GitHub App Authentication**: Secure authentication using GitHub Apps
+- 🚀 **Automatic Workflow Triggers**: Triggers builds when new versions are detected
+- 💾 **Version Persistence**: Remembers the last checked version
+- 📊 **Comprehensive Logging**: Full logging for monitoring and debugging
+
+### Quick Start
+
+```bash
+# 1. Set up GitHub App credentials
+cd k8s
+cp secret.yaml.template secret.yaml
+# Edit secret.yaml with your GitHub App credentials
+
+# 2. Deploy to Kubernetes
+./deploy.sh
+
+# 3. Monitor the CronJob
+kubectl get cronjobs
+kubectl logs -l app=routeros-version-checker
+```
+
+### Documentation
+
+- **[Kubernetes Setup Guide](k8s/README.md)** - Complete deployment instructions
+- **[Configuration Examples](k8s/EXAMPLES.md)** - Example configurations and use cases
+- **[Python Script](scripts/check_routeros_version.py)** - The version checker implementation
+
+For detailed setup instructions, see the [k8s/README.md](k8s/README.md) file.
 
 ## License
 

@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: routeros-version-checker-config
+  namespace: default
+data:
+  # GitHub repository in format "owner/repo"
+  GITHUB_REPO: "CalebSargeant/mikrotik-chr"
+  
+  # Workflow ID or filename to trigger
+  WORKFLOW_ID: "build-chr.yml"
+  
+  # Path where the current version will be stored
+  VERSION_FILE: "/data/current_version.txt"
