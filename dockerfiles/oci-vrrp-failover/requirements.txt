@@ -1,0 +1,8 @@
+# Python dependencies for the OCI VRRP failover helper.
+
+# OCI SDK + CLI — used to reassign the floating private IP to the local VNIC.
+# Pinned to >=3.49 (current operator-local version 3.73.1 as of 2026-05) and
+# <4.0 so a future major version bump doesn't silently land via dependabot
+# without a verification step (the CLI's command surface is conservative
+# across 3.x but breaking changes are explicitly held for major bumps).
+oci-cli>=3.49.0,<4.0.0
