@@ -1,0 +1,12 @@
+site_name: MikroTik CHR Multi-Architecture Images
+
+nav:
+  - Home: index.md
+  - AWS Deployment: aws-deployment.md
+  - OCI VRRP Failover: oci-vrrp-failover.md
+  - AWS Marketplace Preparation: marketplace-preparation.md
+
+theme:
+  name: material
+  palette:
+    scheme: default
