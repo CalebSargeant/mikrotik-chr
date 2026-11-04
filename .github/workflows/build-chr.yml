@@ -173,7 +173,8 @@ jobs:
 
   create-release:
     needs: [check-version, build-images]
-    if: needs.check-version.outputs.should-build == 'true'
+    # Branch pushes build too; only main moves the tag and the release.
+    if: needs.check-version.outputs.should-build == 'true' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
