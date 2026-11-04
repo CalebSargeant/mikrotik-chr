@@ -91,7 +91,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libguestfs-tools unzip curl gzip qemu-user-static
+          sudo apt-get install -y unzip curl gzip
 
       - name: Cache CHR download
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
