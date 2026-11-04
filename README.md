@@ -27,7 +27,7 @@ This repository automatically builds pre-configured MikroTik Cloud Hosted Router
 ## Features
 
 - ✅ **Multi-Architecture Support**: AMD64 and ARM64 builds
-- 🔄 **Rotating Passwords**: Admin password rotates with each build for enhanced security
+- 🔑 **No Shared Password**: admin logs in with the instance's own SSH key, read from OCI or AWS instance metadata
 - 🌐 **Cloud-Ready Configuration**: DHCP client enabled, SSH and API-SSL accessible
 - ☁️ **AWS EC2 Compatible**: Ready-to-deploy EC2 images
 - 🚀 **Smart Automated Builds**: Only builds when new CHR versions are detected
@@ -41,7 +41,7 @@ Visit our [Releases](https://github.com/CalebSargeant/mikrotik-chr/releases) pag
 - `chr-amd64.img.gz` - For Intel/AMD x86-64 systems
 - `chr-arm64.img.gz` - For ARM64 systems (including AWS Graviton)
 
-Each release includes **both architectures** as downloadable assets, with a single rotating admin password shared between both images.
+Each release includes **both architectures** as downloadable assets.
 
 ### Default Configuration
 
@@ -50,7 +50,7 @@ Each image comes pre-configured with:
 - **SSH Access**: Enabled on port 22
 - **API-SSL**: Enabled on port 8729
 - **DHCP Client**: Enabled on ether1 interface
-- **Admin Password**: Displayed in the release notes (rotates with each build)
+- **Admin Login**: the SSH keys the instance was launched with, added on first boot from OCI (`ssh_authorized_keys`) or AWS (key pair) instance metadata over IMDSv2. The admin password is random and shown nowhere.
 
 ## AWS EC2 Deployment
 
@@ -71,9 +71,8 @@ Each image comes pre-configured with:
    ```
 
 3. **Access your CHR router**:
-   - SSH: `ssh admin@<your-ec2-ip>`
+   - SSH: `ssh -i your-key.pem admin@<your-ec2-ip>`, with the key pair the instance was launched with
    - WebFig: `https://<your-ec2-ip>:8729` (accept self-signed certificate)
-   - Password: Check the latest release notes for the current admin password
 
 ### Option 2: Custom AMI Creation
 
@@ -117,11 +116,15 @@ Inbound Rules:
    sudo reboot
    ```
 
+The first boot reads admin's SSH key from OCI or AWS instance metadata. On a host with neither, admin ends up with no key and no known password, so use MikroTik's own image there.
+
 ## Accessing Your CHR Router
 
 ### Default Credentials
 - **Username**: `admin`  
-- **Password**: Check the release notes for the current password
+- **Login**: the SSH keys from the instance metadata. Launched without one, the router has no usable login.
+
+> ⚠️ Every image released before this change baked in one known admin password, printed in its release notes or committed to this repository's history. A router started from one accepts that password from anyone who reaches its SSH or API port until it is changed: change it, or redeploy.
 
 ### Access Methods
 1. **SSH**: `ssh admin@<router-ip>`
@@ -129,7 +132,7 @@ Inbound Rules:
 3. **API**: Port 8729 with SSL
 
 ### First Login Steps
-1. Change the admin password immediately
+1. Set an admin password if you need WebFig or the API (they take no SSH key)
 2. Configure additional users if needed
 3. Set up your routing configuration
 4. Configure firewall rules as appropriate
@@ -161,9 +164,6 @@ Inbound Rules:
 # Clone repository
 git clone https://github.com/CalebSargeant/mikrotik-chr.git
 cd mikrotik-chr
-
-# Generate password and modify startup script
-./scripts/generate-password.sh
 
 # Manual build process (requires root privileges)
 sudo ./scripts/inject.sh

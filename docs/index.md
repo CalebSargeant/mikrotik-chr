@@ -5,7 +5,7 @@ This repository automatically builds pre-configured MikroTik Cloud Hosted Router
 ## Features
 
 - ✅ **Multi-Architecture Support**: AMD64 and ARM64 builds
-- 🔄 **Rotating Passwords**: Admin password rotates with each build for enhanced security
+- 🔑 **No Shared Password**: admin logs in with the instance's own SSH key, read from OCI or AWS instance metadata
 - 🌐 **Cloud-Ready Configuration**: DHCP client enabled, SSH and API-SSL accessible
 - ☁️ **AWS EC2 Compatible**: Ready-to-deploy EC2 images
 - 🚀 **Smart Automated Builds**: Only builds when new CHR versions are detected
@@ -19,7 +19,7 @@ Visit our [Releases](https://github.com/CalebSargeant/mikrotik-chr/releases) pag
 - `chr-amd64.img.gz` - For Intel/AMD x86-64 systems
 - `chr-arm64.img.gz` - For ARM64 systems (including AWS Graviton)
 
-Each release includes **both architectures** as downloadable assets, with a single rotating admin password shared between both images.
+Each release includes **both architectures** as downloadable assets.
 
 ### Default Configuration
 
@@ -28,7 +28,7 @@ Each image comes pre-configured with:
 - **SSH Access**: Enabled on port 22
 - **API-SSL**: Enabled on port 8729
 - **DHCP Client**: Enabled on ether1 interface
-- **Admin Password**: Displayed in the release notes (rotates with each build)
+- **Admin Login**: the SSH keys the instance was launched with, added on first boot from OCI (`ssh_authorized_keys`) or AWS (key pair) instance metadata over IMDSv2. The admin password is random and shown nowhere.
 
 ## Deployment Options
 
@@ -44,9 +44,6 @@ Each image comes pre-configured with:
 # Clone repository
 git clone https://github.com/CalebSargeant/mikrotik-chr.git
 cd mikrotik-chr
-
-# Generate password and modify startup script
-./scripts/generate-password.sh
 
 # Manual build process (requires root privileges)
 sudo ./scripts/inject.sh

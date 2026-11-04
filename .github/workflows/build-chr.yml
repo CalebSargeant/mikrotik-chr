@@ -14,7 +14,6 @@ jobs:
     outputs:
       version: ${{ steps.get-version.outputs.version }}
       should-build: ${{ steps.check-version.outputs.should-build }}
-      password: ${{ steps.password.outputs.password }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -78,12 +77,6 @@ jobs:
             echo "should-build=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Generate rotating password
-        id: password
-        if: steps.check-version.outputs.should-build == 'true'
-        run: |
-          ./scripts/generate-password.sh
-
   build-images:
     needs: check-version
     if: needs.check-version.outputs.should-build == 'true'
@@ -93,15 +86,15 @@ jobs:
         arch: [amd64, arm64]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libguestfs-tools unzip curl gzip qemu-user-static
+          sudo apt-get install -y unzip curl gzip
 
       - name: Cache CHR download
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         id: cache-chr
         with:
           path: chr-base.zip
@@ -127,21 +120,6 @@ jobs:
           # Extract and rename for this architecture
           unzip chr-base.zip -d .
           mv chr-${VERSION}.img chr-${{ matrix.arch }}.img
-
-      - name: Restore password placeholder
-        run: |
-          # Ensure we have the placeholder for injection
-          # Replace any password attribute value (password="...") with a placeholder.
-          # The regex matches password="ANYTHING" and replaces it with password="PLACEHOLDER_PASSWORD".
-          # This is necessary to allow safe password injection in a later step.
-          sed -i 's/password=\"[^\"]*\"/password=\"PLACEHOLDER_PASSWORD\"/g' scripts/startup.rsc
-
-      - name: Generate rotating password (architecture-specific)
-        run: |
-          # Use the password from the check-version job
-          PASSWORD="${{ needs.check-version.outputs.password }}"
-          sed -i "s/PLACEHOLDER_PASSWORD/$PASSWORD/g" scripts/startup.rsc
-          echo "🔐 Password injected into startup.rsc"
 
       - name: Mount and modify image using loop device
         run: |
@@ -187,7 +165,7 @@ jobs:
           ls -lh chr-${{ matrix.arch }}.img.gz
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: chr-${{ matrix.arch }}-image
           path: chr-${{ matrix.arch }}.img.gz
@@ -195,17 +173,18 @@ jobs:
 
   create-release:
     needs: [check-version, build-images]
-    if: needs.check-version.outputs.should-build == 'true'
+    # Branch pushes build too; only main moves the tag and the release.
+    if: needs.check-version.outputs.should-build == 'true' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
           persist-credentials: true
 
       - name: Download all build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           path: ./artifacts
 
@@ -238,7 +217,6 @@ jobs:
           git push --force origin $TAG
 
       - name: Create or update GitHub Release
-        if: steps.check.outputs.skip == 'false'
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           tag_name: v${{ needs.check-version.outputs.version }}
@@ -255,7 +233,7 @@ jobs:
             ## ✨ Features
             - 🔐 **SSH & API-SSL** enabled for secure remote access
             - 🌐 **DHCP Client** pre-configured on ether1 (cloud-ready)
-            - 🔑 **Rotating Admin Password**: `${{ needs.check-version.outputs.password }}`
+            - 🔑 **No Shared Password**: admin logs in with the instance's SSH key, read from OCI or AWS instance metadata on first boot
             - ☁️ **AWS EC2 Compatible** - ready for cloud deployment
             - 🛠️ **System Identity**: `chr` (pre-configured)
 
@@ -266,12 +244,11 @@ jobs:
             ```
 
             ## 📋 Access Information
-            - **SSH**: `ssh admin@<your-ip>` (port 22)
+            - **SSH**: `ssh admin@<your-ip>` (port 22) with the key the instance was launched with
             - **WebFig**: `https://<your-ip>:8729` (accept self-signed cert)
             - **Username**: `admin`
-            - **Password**: `${{ needs.check-version.outputs.password }}`
 
-            > 🔒 **Security Note**: Admin password rotates with each build for enhanced security.
+            > 🔒 **Security Note**: No password ships in the image or these notes. The admin password is random; set your own over SSH if you need WebFig or the API.
 
             ---
             *For deployment guides and documentation, visit the [repository](https://github.com/CalebSargeant/mikrotik-chr).*

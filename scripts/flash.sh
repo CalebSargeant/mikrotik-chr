@@ -58,7 +58,7 @@ After reboot:
 - CHR will be available via SSH on port 22
 - WebFig will be available on https://<ip>:8729
 - Username: admin
-- Password: Check the GitHub release notes
+- Login: the SSH key this instance was launched with (there is no password)
 
 Wait 2-3 minutes after reboot for CHR to fully initialize.
 
