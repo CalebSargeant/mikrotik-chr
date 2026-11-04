@@ -98,7 +98,7 @@ This document outlines the steps needed to prepare MikroTik CHR images for AWS M
 
 ### Phase 1: Foundation (Current)
 - [x] Multi-architecture build system
-- [x] Automated password rotation
+- [x] No baked-in password: admin's SSH key comes from instance metadata
 - [x] Basic security configuration
 - [x] AWS deployment documentation
 
@@ -134,7 +134,7 @@ This document outlines the steps needed to prepare MikroTik CHR images for AWS M
 - Marketplace pricing should account for license costs
 
 ### Security Considerations
-- Default password rotation (good for security)
+- No default password: admin logs in with the instance's SSH key
 - SSH enabled by default (required for management)
 - Firewall rules need customer customization
 

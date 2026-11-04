@@ -10,7 +10,6 @@ echo "======================================================="
 echo "📁 Checking required files..."
 required_files=(
     "scripts/startup.rsc"
-    "scripts/generate-password.sh"
     "scripts/check-version.sh"
     "scripts/flash.sh"
     ".github/workflows/build-chr.yml"
@@ -52,13 +51,13 @@ for script in scripts/*.sh; do
     fi
 done
 
-# Check startup.rsc has placeholder
+# Check startup.rsc bakes in no password
 echo ""
 echo "🔑 Checking startup.rsc configuration..."
-if grep -q "PLACEHOLDER_PASSWORD" scripts/startup.rsc; then
-    echo "✅ Password placeholder found"
+if grep -q "password=\[:rndstr" scripts/startup.rsc && ! grep -q 'password="' scripts/startup.rsc; then
+    echo "✅ Admin password is random, none is baked in"
 else
-    echo "❌ Password placeholder missing - may have been replaced during testing"
+    echo "❌ startup.rsc must set a random admin password, never a literal one"
     exit 1
 fi
 
@@ -73,19 +72,6 @@ if grep -q "/ip dhcp-client add interface=ether1" scripts/startup.rsc; then
     echo "✅ DHCP client configuration found"
 else
     echo "❌ DHCP client configuration missing"
-    exit 1
-fi
-
-# Test password generation
-echo ""
-echo "🔐 Testing password generation..."
-if ./scripts/generate-password.sh >/dev/null 2>&1; then
-    echo "✅ Password generation works"
-    # Reset back to placeholder
-    sed -i 's/password="[^"]*"/password="PLACEHOLDER_PASSWORD"/g' scripts/startup.rsc
-    echo "✅ Placeholder restored"
-else
-    echo "❌ Password generation failed"
     exit 1
 fi
 
@@ -128,7 +114,7 @@ echo ""
 echo "🎉 All validation checks passed!"
 echo "======================================================="
 echo "✅ Multi-architecture build setup is ready"
-echo "✅ Password rotation is configured"
+echo "✅ No admin password is baked into the image"
 echo "✅ Interfaces are enabled for cloud deployment"
 echo "✅ AWS documentation is in place"
 echo "✅ Streamlined workflow with unified releases configured"

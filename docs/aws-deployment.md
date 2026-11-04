@@ -51,8 +51,8 @@ curl -sSL https://raw.githubusercontent.com/CalebSargeant/mikrotik-chr/main/scri
 #### Step 3: Access CHR Router
 
 ```bash
-# SSH to the CHR router (password from latest release notes)
-ssh admin@<instance-public-ip>
+# SSH to the CHR router with the instance's key pair (there is no password)
+ssh -i your-key.pem admin@<instance-public-ip>
 
 # Or access WebFig
 # Navigate to: https://<instance-public-ip>:8729

@@ -15,10 +15,6 @@
       "description": "Manual build helper: mounts the CHR image and injects the pre-generated startup.rsc configuration."
     },
     {
-      "path": "scripts/generate-password.sh",
-      "description": "Generates a random admin password and writes it into startup.rsc before image injection."
-    },
-    {
       "path": "scripts/validate.sh",
       "description": "Validates the built CHR image after injection."
     },
@@ -54,7 +50,7 @@
     },
     {
       "path": "scripts/startup.rsc",
-      "description": "RouterOS script injected into the CHR image: sets system identity, enables DHCP on ether1, enables SSH and API-SSL, and sets the admin password."
+      "description": "RouterOS script injected into the CHR image: sets system identity, enables DHCP on ether1, enables SSH and API-SSL, sets a random admin password, and schedules a job that adds admin's SSH keys from OCI or AWS instance metadata."
     },
     {
       "path": ".github/workflows/build-chr.yml",
@@ -108,7 +104,7 @@
   "callgraph_highlights": [
     "MikroTik VRRP on-master hook -> POST http://172.17.0.3:8080/promote -> server.py:promote_handler -> OCI SDK update_route_table",
     "Kubernetes CronJob -> check_routeros_version.py:main -> RouterOSVersionChecker.run -> get_latest_routeros_version + get_current_version -> generate_jwt -> get_installation_token -> trigger_workflow (build-chr.yml dispatch)",
-    "build-chr.yml check-version job -> scripts/check-version.sh; build jobs -> scripts/generate-password.sh + scripts/inject.sh + scripts/validate.sh -> GitHub Release"
+    "build-chr.yml check-version job -> scripts/check-version.sh; build jobs -> scripts/inject.sh + scripts/validate.sh -> GitHub Release"
   ],
   "hotspots": [
     {
