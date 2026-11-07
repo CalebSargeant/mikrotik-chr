@@ -51,11 +51,14 @@ curl -sSL https://raw.githubusercontent.com/CalebSargeant/mikrotik-chr/main/scri
 #### Step 3: Access CHR Router
 
 ```bash
-# SSH to the CHR router with the instance's key pair (there is no password)
+# SSH to the CHR router using the key pair the instance was launched with
 ssh -i your-key.pem admin@<instance-public-ip>
+```
 
-# Or access WebFig
-# Navigate to: https://<instance-public-ip>:8729
+WebFig and the API (`https://<instance-public-ip>:8729`) require a password. The admin password is set to a random value at first boot and is never shown, so you must SSH in first and set one before WebFig will work:
+
+```routeros
+/user set admin password=<your-password>
 ```
 
 ### Method 2: Custom AMI Creation
@@ -182,6 +185,7 @@ aws ec2 authorize-security-group-ingress \
    - Ensure security group allows port 8729
    - Check if API-SSL is enabled: `/ip service print`
    - Try HTTPS (not HTTP): `https://ip:8729`
+   - If the login prompt appears but credentials are rejected: the random first-boot password is never shown. SSH in with your key pair and run `/user set admin password=<your-password>`, then log into WebFig with that password.
 
 ### Diagnostic Commands
 
