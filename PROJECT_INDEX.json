@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-07",
+  "generated": "2026-11-11",
   "summary": "Automates building pre-configured MikroTik Cloud Hosted Router (CHR) disk images for AMD64 and ARM64. A GitHub Actions workflow detects new RouterOS releases, builds multi-arch images, and publishes unified releases. A Kubernetes CronJob (Python) checks MikroTik's download page via GitHub App auth and dispatches the workflow when a new version appears. A separate Docker container handles OCI VRRP failover by updating OCI route tables when a MikroTik VRRP master transition fires.",
   "entrypoints": [
     {
@@ -87,6 +87,10 @@
     {
       "path": "k8s/debug-pod.yaml",
       "description": "Ad-hoc debug Pod manifest for troubleshooting the version-checker environment."
+    },
+    {
+      "path": "k8s/create-scripts-configmap.sh",
+      "description": "Helper script to generate k8s/scripts-configmap.yaml by running kubectl create configmap --dry-run against the actual Python script and requirements files."
     },
     {
       "path": "dockerfiles/oci-vrrp-failover/Dockerfile",
